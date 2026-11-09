@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f3b24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Libro de vuelo">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Libro de Vuelo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: sticky top bar with tabs, one centered column of panels, ruled-ledger tables, a single odometer readout as the bold element. */
+:root{
+  --bg:#eef0e8; --surface:#ffffff; --ink:#1b2114; --muted:#5d6650; --line:#d4d9c8;
+  --accent:#3d4f2b; --accent-ink:#ffffff; --accent-soft:#e1e8d3;
+  --ok:#1d7a4d; --ok-soft:#dcf1e6; --warn:#a85f00; --warn-soft:#fbebd0; --late:#b3261e; --late-soft:#f8dedb;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12160e; --surface:#1a2014; --ink:#e7eadf; --muted:#9aa38c; --line:#2c3423;
+    --accent:#a9c47f; --accent-ink:#1a2210; --accent-soft:#283320;
+    --ok:#4cc38a; --ok-soft:#14301f; --warn:#f0b04a; --warn-soft:#38290f; --late:#ff7a70; --late-soft:#3c1b19;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12160e; --surface:#1a2014; --ink:#e7eadf; --muted:#9aa38c; --line:#2c3423;
+  --accent:#a9c47f; --accent-ink:#1a2210; --accent-soft:#283320;
+  --ok:#4cc38a; --ok-soft:#14301f; --warn:#f0b04a; --warn-soft:#38290f; --late:#ff7a70; --late-soft:#3c1b19;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:.02em;text-wrap:balance;margin:0}
+h2{font-size:22px;text-transform:uppercase;letter-spacing:.06em}
+h3{font-size:17px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+a{color:var(--accent)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:2px solid var(--ink)}
+header.top::after{content:"";display:block;height:3px;background:var(--bg);border-bottom:1px solid var(--ink)}
+.bar{max-width:1040px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px 24px}
+.brand{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.08em;text-transform:uppercase;padding-bottom:8px;white-space:nowrap}
+.brand small{display:block;font:500 11px var(--body);letter-spacing:.12em;color:var(--muted);margin-top:-4px}
+nav{display:flex;gap:2px;overflow-x:auto;max-width:100%}
+nav a{padding:9px 14px;text-decoration:none;color:var(--muted);font-weight:500;border-bottom:3px solid transparent;white-space:nowrap}
+nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav a:hover{color:var(--ink)}
+nav a.cta{color:var(--accent);font-weight:600}
+
+main{max-width:1040px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-right)) calc(64px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:20px}
+section.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px}
+.panel>header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 12px;margin-bottom:12px}
+.hint{color:var(--muted);font-size:13px}
+.banner{border:1px solid var(--warn);background:var(--warn-soft);color:var(--ink);border-radius:6px;padding:10px 14px;font-size:14px}
+.banner b{color:var(--warn)}
+
+.hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr);gap:16px}
+.odo{background:var(--ink);color:var(--bg);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;justify-content:space-between;min-height:150px}
+.odo .lbl{font:600 12px var(--body);letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+.odo .val{font-family:var(--display);font-weight:700;font-size:clamp(52px,9vw,80px);line-height:1;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.odo .val small{font-size:.35em;letter-spacing:.1em;margin-left:6px;opacity:.7}
+.odo .sub{font-size:13px;opacity:.8}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.tile .lbl{font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tile .val{font:500 24px var(--mono);font-variant-numeric:tabular-nums}
+.tile .sub{font-size:13px;color:var(--muted)}
+@media (max-width:720px){.hero{grid-template-columns:1fr}}
+
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th{font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--ink);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+tr.total td{font-weight:600;border-top:2px solid var(--ink);border-bottom:0}
+td .tag{display:inline-block;font:500 11px var(--mono);padding:1px 6px;border:1px solid var(--line);border-radius:3px;color:var(--muted)}
+td.obs{max-width:260px;color:var(--muted);font-size:13px}
+
+.rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.rule{border:1px solid var(--line);border-left-width:6px;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.rule.ok{border-left-color:var(--ok)} .rule.warn{border-left-color:var(--warn)} .rule.late{border-left-color:var(--late)}
+.rule .name{font-weight:600}
+.pill{align-self:flex-start;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:99px}
+.ok .pill{background:var(--ok-soft);color:var(--ok)} .warn .pill{background:var(--warn-soft);color:var(--warn)} .late .pill{background:var(--late-soft);color:var(--late)}
+.rule .head{font:500 15px var(--mono)}
+.rule .det{font-size:13px;color:var(--muted)}
+.rule .acts{display:flex;gap:8px;margin-top:4px}
+.empty{border:1px dashed var(--line);border-radius:6px;padding:16px;color:var(--muted)}
+
+.bars{display:flex;flex-direction:column;gap:8px}
+.brow{display:grid;grid-template-columns:110px minmax(0,1fr) 120px;gap:10px;align-items:center;font-size:14px}
+.brow .track{height:12px;background:var(--accent-soft);border-radius:2px;overflow:hidden}
+.brow .fill{height:100%;background:var(--accent);min-width:2px}
+.brow .v{text-align:right}
+.brow .k{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+@media (max-width:720px){.cols{grid-template-columns:1fr}.brow{grid-template-columns:80px minmax(0,1fr) 100px}}
+
+form.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.fld{display:flex;flex-direction:column;gap:4px;grid-column:span 2}
+.fld.w3{grid-column:span 3}.fld.w6{grid-column:span 6}.fld.w1{grid-column:span 1}
+@media (max-width:720px){form.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fld,.fld.w3,.fld.w1{grid-column:span 1}.fld.w6{grid-column:span 2}}
+label{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+input,select,textarea{font:16px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:9px 10px;width:100%;min-height:42px}
+input[type=checkbox]{width:auto;min-height:0}
+textarea{resize:vertical;min-height:72px}
+.err{color:var(--late);font-size:13px;min-height:1em}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button,.btn{font:600 14px var(--body);cursor:pointer;border-radius:5px;padding:9px 16px;min-height:40px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.danger{color:var(--late);border-color:var(--late)}
+button.small{padding:4px 10px;min-height:30px;font-size:13px}
+button:hover{filter:brightness(.96)}
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.filters input{max-width:280px}.filters select{max-width:200px}
+.seg{display:inline-flex;gap:0}
+
+#modal{position:fixed;inset:0;background:rgba(5,10,16,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+#modal.on{display:flex}
+#modal .box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px;max-width:460px;width:100%;display:flex;flex-direction:column;gap:14px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:6px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+.rulehide{display:none}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="bar">
+    <div class="brand">Libro de vuelo<small>REGISTRO PERSONAL DE HORAS</small></div>
+    <nav id="nav" aria-label="Secciones">
+      <a href="#resumen" data-tab="resumen">Resumen</a>
+      <a href="#vigencias" data-tab="vigencias">Vigencias</a>
+      <a href="#vuelos" data-tab="vuelos">Vuelos</a>
+      <a href="#anadir" data-tab="anadir" class="cta">+ Añadir vuelo</a>
+      <a href="#datos" data-tab="datos">Datos</a>
+    </nav>
+  </div>
+</header>
+<main id="app"></main>
+<div id="modal" role="dialog" aria-modal="true"><div class="box" id="modalbox"></div></div>
+<div id="toast" role="status"></div>
+
+<script>
+/*PURE-START*/
+const pad2=n=>String(n).padStart(2,'0');
+const hm=m=>`${Math.floor(m/60)}:${pad2(Math.round(m)%60)}`;
+function parseHM(s){
+  s=String(s==null?'':s).trim().replace(',','.');
+  if(!s) return NaN;
+  const m=s.match(/^(\d{1,4}):(\d{1,2})(?::\d{1,2})?$/);
+  if(m){ const mm=+m[2]; if(mm>59) return NaN; return +m[1]*60+mm; }
+  if(/^\d+(\.\d+)?$/.test(s)) return Math.round(parseFloat(s)*60);
+  return NaN;
+}
+const dayNum=iso=>Math.floor(Date.UTC(+iso.slice(0,4),+iso.slice(5,7)-1,+iso.slice(8,10))/864e5);
+const isoFromDayNum=n=>new Date(n*864e5).toISOString().slice(0,10);
+const diffDays=(a,b)=>dayNum(a)-dayNum(b);
+const addDays=(iso,n)=>isoFromDayNum(dayNum(iso)+n);
+const serialToISO=n=>isoFromDayNum(Math.floor(n)-25569);
+const fmtDate=iso=>iso?`${iso.slice(8,10)}/${iso.slice(5,7)}/${iso.slice(0,4)}`:'';
+const todayISO=()=>{const d=new Date();return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const isSim=f=>String(f.mision||'').toUpperCase()==='SIMULADOR';
+const isSchool=f=>/^ARMILLA/i.test(String(f.zona||'').trim());
+
+function parseDateAny(v){
+  if(v==null||v==='') return '';
+  if(typeof v==='number') return v>20000?serialToISO(v):'';
+  const s=String(v).trim();
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);
+  if(m){ const y=m[3].length===2?'20'+m[3]:m[3]; return `${y}-${pad2(+m[2])}-${pad2(+m[1])}`; }
+  if(/^\d{5}(\.\d+)?$/.test(s)) return serialToISO(parseFloat(s));
+  return '';
+}
+const normH=s=>String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z]/g,'');
+const FIELD={FECHA:'fecha',TIPO:'tipo',MATRICULA:'matricula',ROLL:'rol',ROL:'rol',MISION:'mision',HORAS:'horas',VUELO:'vuelo',TRIPULACION:'tripulacion',ZONAAERODROMO:'zona',ZONA:'zona',OBSERVACIONES:'obs'};
+
+function tableToFlights(header,rows){
+  const map={};
+  header.forEach((h,i)=>{const k=FIELD[normH(h)]; if(k&&!(k in map)) map[k]=i;});
+  if(map.fecha==null||map.horas==null) throw new Error('No encuentro las columnas FECHA y HORAS en la fila de títulos.');
+  const out=[]; let skipped=0;
+  for(const r of rows){
+    if(!r||r.every(v=>v===''||v==null)) continue;
+    const date=parseDateAny(r[map.fecha]);
+    const raw=r[map.horas];
+    const min=typeof raw==='number'?Math.round(raw*1440):parseHM(raw);
+    if(!date||!(min>0)){skipped++;continue;}
+    const g=k=>map[k]==null?'':String(r[map[k]]==null?'':r[map[k]]).trim();
+    out.push({id:uid(),date,tipo:g('tipo'),matricula:g('matricula'),rol:g('rol').toUpperCase(),mision:g('mision').toUpperCase(),min,vuelo:g('vuelo').toUpperCase()==='IFR'?'IFR':'VFR',tripulacion:g('tripulacion'),zona:g('zona'),obs:g('obs')});
+  }
+  return {flights:out,skipped};
+}
+
+function parseCSV(text){
+  text=text.replace(/^﻿/,'');
+  const first=text.split(/\r?\n/)[0]||'';
+  const d=(first.split(';').length>=first.split(',').length)?';':',';
+  const rows=[]; let row=[],cur='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else if(c==='"') q=true;
+    else if(c===d){ row.push(cur); cur=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cur); cur=''; rows.push(row); row=[]; }
+    else cur+=c;
+  }
+  if(cur!==''||row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+
+const xmlUnesc=s=>s.replace(/&#x([0-9a-f]+);/gi,(_,h)=>String.fromCodePoint(parseInt(h,16))).replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(+n)).replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
+async function inflateRaw(u8){
+  const ds=new DecompressionStream('deflate-raw');
+  const stream=new Blob([u8]).stream().pipeThrough(ds);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+async function unzip(buf){
+  const dv=new DataView(buf), u8=new Uint8Array(buf), dec=new TextDecoder();
+  let e=buf.byteLength-22; while(e>=0&&dv.getUint32(e,true)!==0x06054b50) e--;
+  if(e<0) throw new Error('El archivo no es un .xlsx válido.');
+  const n=dv.getUint16(e+10,true); let p=dv.getUint32(e+16,true); const files={};
+  for(let i=0;i<n;i++){
+    if(dv.getUint32(p,true)!==0x02014b50) break;
+    const method=dv.getUint16(p+10,true), csize=dv.getUint32(p+20,true);
+    const nl=dv.getUint16(p+28,true), el=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), off=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nl));
+    const start=off+30+dv.getUint16(off+26,true)+dv.getUint16(off+28,true);
+    files[name]={method,data:u8.subarray(start,start+csize)};
+    p+=46+nl+el+cl;
+  }
+  return files;
+}
+async function fileText(files,name){
+  const f=files[name]; if(!f) return null;
+  const d=f.method===0?f.data:await inflateRaw(f.data);
+  return new TextDecoder().decode(d);
+}
+const colIdx=L=>L.split('').reduce((a,c)=>a*26+c.charCodeAt(0)-64,0)-1;
+const textsOf=x=>[...x.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)].map(m=>xmlUnesc(m[1])).join('');
+async function readXlsx(buf){
+  const files=await unzip(buf);
+  const wbx=await fileText(files,'xl/workbook.xml');
+  if(!wbx) throw new Error('El archivo no parece un libro de Excel.');
+  const sheets=[...wbx.matchAll(/<sheet\b[^>]*>/g)].map(m=>({name:xmlUnesc((m[0].match(/name="([^"]*)"/)||[])[1]||''),rid:(m[0].match(/r:id="([^"]*)"/)||[])[1]}));
+  const pick=sheets.find(s=>normH(s.name)==='HORAS')||sheets[0];
+  if(!pick) throw new Error('El libro no tiene hojas.');
+  const rels=await fileText(files,'xl/_rels/workbook.xml.rels')||'';
+  let target='worksheets/sheet1.xml';
+  for(const m of rels.matchAll(/<Relationship\b[^>]*>/g)){
+    if((m[0].match(/Id="([^"]*)"/)||[])[1]===pick.rid){ target=(m[0].match(/Target="([^"]*)"/)||[])[1]; break; }
+  }
+  const path=target.startsWith('/')?target.slice(1):'xl/'+target;
+  const sx=await fileText(files,path); if(!sx) throw new Error('No he podido leer la hoja '+pick.name+'.');
+  const ssx=await fileText(files,'xl/sharedStrings.xml');
+  const sst=ssx?[...ssx.matchAll(/<si\b[^>]*>([\s\S]*?)<\/si>/g)].map(m=>textsOf(m[1])):[];
+  const grid=new Map();
+  for(const m of sx.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
+    const attrs=m[1], body=m[2]||'';
+    const ref=(attrs.match(/\br="([A-Z]+)(\d+)"/)||[]); if(!ref[1]) continue;
+    const t=(attrs.match(/\bt="([^"]*)"/)||[])[1]||'n';
+    const v=(body.match(/<v>([\s\S]*?)<\/v>/)||[])[1];
+    let val='';
+    if(t==='s') val=v==null?'':(sst[+v]??'');
+    else if(t==='inlineStr') val=textsOf(body);
+    else if(t==='str') val=v==null?'':xmlUnesc(v);
+    else if(t==='b'||t==='e') val='';
+    else val=v==null||v===''?'':Number(v);
+    const r=+ref[2]; if(!grid.has(r)) grid.set(r,[]);
+    grid.get(r)[colIdx(ref[1])]=val;
+  }
+  const nums=[...grid.keys()].sort((a,b)=>a-b);
+  let hr=nums.find(r=>(grid.get(r)||[]).some(v=>normH(v)==='FECHA'));
+  if(hr==null) throw new Error('No encuentro la fila de títulos con la columna FECHA.');
+  const header=Array.from(grid.get(hr).slice(0,10),v=>v==null?'':v);
+  const rows=nums.filter(r=>r>hr).map(r=>Array.from((grid.get(r)||[]).slice(0,10),v=>v==null?'':v));
+  return {sheet:pick.name,header,rows};
+}
+
+function matchFlights(flights,rule){
+  return flights.filter(f=>(!rule.tipo||f.tipo===rule.tipo)&&(rule.source==='any'||(rule.source==='sim')===isSim(f)));
+}
+function evalRule(rule,flights,today){
+  const list=matchFlights(flights,rule);
+  if(rule.kind==='recency'){
+    const last=list.reduce((a,f)=>f.date>a?f.date:a,'');
+    if(!last) return {state:'late',head:'Sin registros',detail:'No hay ningún vuelo o sesión que cuente para este requisito.'};
+    const due=addDays(last,rule.days), left=diffDays(due,today);
+    const state=left<0?'late':left<=rule.warn?'warn':'ok';
+    const head=left<0?`Vencido hace ${-left} d`:left===0?'Vence hoy':`Quedan ${left} d`;
+    return {state,head,detail:`Último: ${fmtDate(last)} · ${left<0?'venció':'vence'} el ${fmtDate(due)}`};
+  }
+  const from=rule.calYear?today.slice(0,4)+'-01-01':addDays(today,-rule.days+1);
+  const have=list.filter(f=>f.date>=from&&f.date<=today).reduce((a,f)=>a+f.min,0);
+  const need=Math.round(rule.hours*60);
+  const per=rule.calYear?`año ${today.slice(0,4)}`:`últimos ${rule.days} d`;
+  if(have>=need) return {state:'ok',head:`${hm(have)} de ${hm(need)} h`,detail:`Cumplido en ${per}`};
+  if(rule.calYear){
+    const dl=diffDays(today.slice(0,4)+'-12-31',today);
+    return {state:dl<=rule.warn?'late':'warn',head:`Faltan ${hm(need-have)} h`,detail:`${hm(have)} de ${hm(need)} h en ${per} · quedan ${dl} d de año`};
+  }
+  return {state:'late',head:`Faltan ${hm(need-have)} h`,detail:`${hm(have)} de ${hm(need)} h en ${per}`};
+}
+/*PURE-END*/
+
+/* ---------- App ---------- */
+const KEY='libro-vuelo-v1';
+const ROLES=['PIC','SIC','SPIC','PICUS'];
+const TYPE_ORDER=['EC120','EC135 P2+','EC135 P3','H135 P3H'];
+const MISSION_NAMES={SC:'Seguridad ciudadana',CB:'Cercos y batidas',OE:'Operaciones especiales',VO:'Vigilancia de objetivos',OP:'Orden público',EV:'Grandes eventos',SIMULADOR:'Simulador'};
+let S={flights:[],rules:[],demo:false};
+let storageOK=true, editingId=null, editingRule=null, dl=null, pending=null;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function seed(){
+  const t=todayISO(), d=n=>addDays(t,-n);
+  const F=(n,tipo,mat,rol,mis,min,vuelo,zona)=>({id:uid(),date:d(n),tipo,matricula:mat,rol,mision:mis,min,vuelo,tripulacion:'',zona,obs:'Ejemplo'});
+  S={demo:true,sync:{url:'',token:'',pendingOps:[]},flights:[
+    F(3,'H135 P3H','321','SIC','VO',45,'VFR','Zona de ejemplo A'),
+    F(9,'H135 P3H','321','SIC','EV',95,'VFR','Zona de ejemplo B'),
+    F(16,'EC135 P3','308','SIC','DE',70,'VFR','Zona de ejemplo A'),
+    F(24,'H135 P3H','321','SIC','SIMULADOR',120,'IFR','Simulador'),
+    F(41,'EC135 P2+','301','SIC','SC',80,'VFR','Zona de ejemplo C'),
+    F(58,'H135 P3H','321','SIC','IA',102,'VFR','Zona de ejemplo B'),
+    F(85,'EC135 P3','308','SIC','VB',55,'VFR','Zona de ejemplo A'),
+    F(140,'EC120','','SPIC','ET',150,'VFR','ARMILLA'),
+    F(210,'EC135 P2+','301','SIC','VO',64,'VFR','Zona de ejemplo C'),
+    F(300,'H135 P3H','321','SIC','RE',88,'IFR','Zona de ejemplo B')
+  ],rules:[
+    {id:uid(),demo:true,name:'Ejemplo: actividad en H135 P3H',kind:'recency',tipo:'H135 P3H',source:'real',days:30,hours:0,calYear:false,warn:7},
+    {id:uid(),demo:true,name:'Ejemplo: simulador cada 180 días',kind:'recency',tipo:'',source:'sim',days:180,hours:0,calYear:false,warn:15},
+    {id:uid(),demo:true,name:'Ejemplo: 10 h en 90 días',kind:'hours',tipo:'',source:'real',days:90,hours:10,calYear:false,warn:15}
+  ]};
+}
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){ const o=JSON.parse(raw); if(o&&Array.isArray(o.flights)){ S={flights:o.flights,rules:o.rules||[],demo:!!o.demo,sync:o.sync||{url:'',token:'',pendingOps:[]}}; return; } }
+  }catch(e){ storageOK=false; }
+  seed();
+}
+function save(){
+  try{ localStorage.setItem(KEY,JSON.stringify(S)); if(!storageOK) storageOK=true; }catch(e){ storageOK=false; }
+}
+function leaveDemo(){ if(S.demo){ S.flights=[]; S.rules=S.rules.filter(r=>!r.demo); S.demo=false; } }
+
+/* ---------- Google Sheets sync ---------- */
+function syncConfigured(){ return !!(S.sync && S.sync.url && S.sync.token); }
+async function apiGet(action){
+  const u=new URL(S.sync.url);
+  u.searchParams.set('action',action);
+  u.searchParams.set('token',S.sync.token);
+  const r=await fetch(u.toString());
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error||'error');
+  return j;
+}
+async function apiPost(action,payload){
+  const r=await fetch(S.sync.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:S.sync.token,action,payload:payload||{}})});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  if(!j.ok){ const e=new Error(j.error||'error'); e.server=true; throw e; }
+  return j;
+}
+function remoteToLocal(r){
+  return {id:uid(),rowId:r.rowId,date:r.fecha,tipo:r.tipo||'',matricula:r.matricula||'',rol:r.rol||'',mision:r.clave||'',min:r.min||0,vuelo:r.vuelo||'',tripulacion:r.tripulacion||'',zona:r.zona||'',obs:r.obs||''};
+}
+function localToRemote(f){
+  return {rowId:f.rowId,fecha:f.date,tipo:f.tipo||'',matricula:f.matricula||'',rol:f.rol||'',clave:f.mision||'',min:f.min||0,vuelo:f.vuelo||'',tripulacion:f.tripulacion||'',zona:f.zona||'',obs:f.obs||''};
+}
+async function syncPullAll(){
+  const res=await apiGet('todo');
+  S.flights=(res.flights||[]).map(remoteToLocal);
+  S.demo=false;
+  save();
+  return res;
+}
+async function connectSync(url,token){
+  S.sync=S.sync||{};
+  S.sync.url=url; S.sync.token=token; S.sync.pendingOps=S.sync.pendingOps||[];
+  save();
+  await syncPullAll();
+}
+function disconnectSync(){ S.sync={url:'',token:'',pendingOps:[]}; save(); }
+function queuePending(op,localId,rowId,fecha){
+  S.sync=S.sync||{url:'',token:'',pendingOps:[]};
+  S.sync.pendingOps=S.sync.pendingOps||[];
+  S.sync.pendingOps.push({op,localId,rowId,fecha});
+  save();
+}
+async function drainPending(){
+  if(!syncConfigured()||!S.sync.pendingOps||!S.sync.pendingOps.length) return;
+  const q=[...S.sync.pendingOps];
+  const remaining=[];
+  for(const op of q){
+    try{
+      if(op.op==='delete'){
+        if(op.rowId) await apiPost('delete',{rowId:op.rowId,fecha:op.fecha});
+      } else {
+        const f=S.flights.find(x=>x.id===op.localId);
+        if(f){
+          const res=await apiPost(f.rowId?'update':'add',localToRemote(f));
+          if(res.flight&&res.flight.rowId) f.rowId=res.flight.rowId;
+        }
+      }
+    }catch(e){ if(!e.server) remaining.push(op); }
+  }
+  S.sync.pendingOps=remaining;
+  save();
+}
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('on'),2600); }
+function modal(html){ $('#modalbox').innerHTML=html; $('#modal').classList.add('on'); const b=$('#modalbox button'); if(b) b.focus(); }
+function closeModal(){ $('#modal').classList.remove('on'); pending=null; }
+
+/* ---------- stats helpers ---------- */
+const sum=(a,f)=>a.reduce((s,x)=>s+f(x),0);
+function types(){
+  const seen=[...new Set(S.flights.map(f=>f.tipo).filter(Boolean))];
+  return [...TYPE_ORDER.filter(t=>seen.includes(t)),...seen.filter(t=>!TYPE_ORDER.includes(t)).sort()];
+}
+function ago(iso,today){ if(!iso) return '—'; const n=diffDays(today,iso); return `${fmtDate(iso)} · ${n===0?'hoy':'hace '+n+' d'}`; }
+function winMin(list,today,days){ const from=addDays(today,-days+1); return sum(list.filter(f=>f.date>=from&&f.date<=today),f=>f.min); }
+function lastOf(list){ return list.reduce((a,f)=>f.date>a?f.date:a,''); }
+function bars(items,fmtKey){
+  const max=Math.max(1,...items.map(i=>i.min));
+  return `<div class="bars">${items.map(i=>`<div class="brow"><span class="k" title="${esc(i.title||i.key)}">${esc(fmtKey?fmtKey(i.key):i.key)}</span><span class="track"><span class="fill" style="display:block;width:${(i.min/max*100).toFixed(1)}%"></span></span><span class="v num">${hm(i.min)} h${i.n!=null?` · ${i.n}`:''}</span></div>`).join('')}</div>`;
+}
+
+/* ---------- views ---------- */
+function ruleCard(r,today,manage){
+  const e=evalRule(r,S.flights,today);
+  const label={ok:'Cumple',warn:'Atención',late:'No cumple'}[e.state];
+  return `<div class="rule ${e.state}"><span class="pill">${label}</span><div class="name">${esc(r.name)}</div><div class="head">${esc(e.head)}</div><div class="det">${esc(e.detail)}</div>${manage?`<div class="acts"><button class="small" data-act="rule-edit" data-id="${r.id}">Editar</button><button class="small danger" data-act="rule-del" data-id="${r.id}">Borrar</button></div>`:''}</div>`;
+}
+function viewResumen(){
+  const today=todayISO();
+  const real=S.flights.filter(f=>!isSim(f)), sim=S.flights.filter(isSim);
+  const saer=real.filter(f=>!isSchool(f)), school=real.filter(isSchool);
+  const lastReal=lastOf(real);
+  const ts=types();
+  const order=[...S.rules].map(r=>({r,e:evalRule(r,S.flights,today)})).sort((a,b)=>({late:0,warn:1,ok:2}[a.e.state]-{late:0,warn:1,ok:2}[b.e.state]));
+  const nl=order.filter(x=>x.e.state==='late').length, nw=order.filter(x=>x.e.state==='warn').length;
+  const years=[...new Set(S.flights.map(f=>f.date.slice(0,4)))].sort().reverse();
+  const roles=[...new Set(S.flights.map(f=>f.rol).filter(Boolean))].sort((a,b)=>(ROLES.indexOf(a)<0?9:ROLES.indexOf(a))-(ROLES.indexOf(b)<0?9:ROLES.indexOf(b)));
+  const mis={}; real.forEach(f=>{const k=f.mision||'—'; (mis[k]=mis[k]||{key:k,min:0,n:0}); mis[k].min+=f.min; mis[k].n++;});
+  const misList=Object.values(mis).sort((a,b)=>b.min-a.min).slice(0,10).map(m=>({...m,title:MISSION_NAMES[m.key]||m.key}));
+  const yearBars=years.map(y=>({key:y,min:sum(real.filter(f=>f.date.startsWith(y)),f=>f.min)}));
+  const rows=ts.map(t=>{
+    const r=real.filter(f=>f.tipo===t), s=sim.filter(f=>f.tipo===t);
+    const sa=r.filter(f=>!isSchool(f)), sc=r.filter(isSchool);
+    return `<tr><td><b>${esc(t)}</b></td><td class="r num">${hm(sum(sa,f=>f.min))}</td><td class="r num">${hm(sum(sc,f=>f.min))}</td><td class="r num"><b>${hm(sum(r,f=>f.min))}</b></td><td class="r num">${hm(sum(s.filter(f=>f.vuelo==='VFR'),f=>f.min))}</td><td class="r num">${hm(sum(s.filter(f=>f.vuelo==='IFR'),f=>f.min))}</td><td class="r num">${r.length}</td><td class="r num">${s.length}</td></tr>`;
+  }).join('');
+  const act=ts.map(t=>{
+    const r=real.filter(f=>f.tipo===t), s=sim.filter(f=>f.tipo===t);
+    return `<tr><td><b>${esc(t)}</b></td><td class="num">${ago(lastOf(r),today)}</td><td class="num">${ago(lastOf(s),today)}</td><td class="r num">${hm(winMin(r,today,30))}</td><td class="r num">${hm(winMin(r,today,90))}</td><td class="r num">${hm(winMin(r,today,365))}</td></tr>`;
+  }).join('');
+  const sh=(a,b)=>`${hm(sum(a,f=>f.min))} ${b}`;
+  return `
+  ${S.demo?`<div class="banner"><b>Datos de ejemplo.</b> Lo que ves es ficticio. En <a href="#datos">Datos</a> puedes importar tu Excel, o añadir tu primer vuelo y los ejemplos desaparecen.</div>`:''}
+  ${!storageOK?`<div class="banner"><b>Este navegador no guarda datos aquí.</b> Lo que añadas se perderá al cerrar. Usa Datos &rarr; Copia de seguridad después de cada sesión.</div>`:''}
+  <section class="panel"><div class="hero">
+    <div class="odo"><span class="lbl">Total vuelo real</span><span class="val">${hm(sum(real,f=>f.min))}<small>H</small></span><span class="sub">${sh(saer,'vuelo SAER')} · ${sh(school,'escuela Armilla')}</span></div>
+    <div class="tiles">
+      <div class="tile"><span class="lbl">Simulador (aparte)</span><span class="val">${hm(sum(sim,f=>f.min))}</span><span class="sub">${sim.length} ${sim.length===1?'sesión':'sesiones'}</span></div>
+      <div class="tile"><span class="lbl">Salidas reales</span><span class="val">${real.length}</span><span class="sub">${saer.length} SAER · ${school.length} escuela</span></div>
+      <div class="tile"><span class="lbl">Último vuelo real</span><span class="val" style="font-size:19px">${lastReal?fmtDate(lastReal):'—'}</span><span class="sub">${lastReal?(diffDays(today,lastReal)===0?'hoy':'hace '+diffDays(today,lastReal)+' días'):'sin registros'}</span></div>
+      <div class="tile"><span class="lbl">Últimos 90 días</span><span class="val">${hm(winMin(real,today,90))}</span><span class="sub">${hm(winMin(real,today,365))} en 365 días</span></div>
+    </div></div></section>
+  <section class="panel"><header><h2>Vigencias</h2><span class="hint">${S.rules.length?`${nl} no cumple${nl===1?'':'n'} · ${nw} en atención · <a href="#vigencias">gestionar</a>`:'<a href="#vigencias">Añadir requisitos</a>'}</span></header>
+    ${order.length?`<div class="rules">${order.map(x=>ruleCard(x.r,today,false)).join('')}</div>`:`<div class="empty">Aún no hay requisitos. Añade los tuyos (actividad mínima, horas mínimas) en <a href="#vigencias">Vigencias</a> y aquí verás su estado.</div>`}</section>
+  <section class="panel"><header><h2>Actividad reciente por aeronave</h2><span class="hint">Horas reales en ventanas móviles</span></header>
+    <div class="tablewrap"><table><thead><tr><th>Aeronave</th><th>Último vuelo real</th><th>Último simulador</th><th class="r">30 d</th><th class="r">90 d</th><th class="r">365 d</th></tr></thead><tbody>${act||'<tr><td colspan="6" class="hint">Sin datos.</td></tr>'}</tbody></table></div></section>
+  <section class="panel"><header><h2>Horas por aeronave</h2><span class="hint">SAER = vuelo real fuera de Armilla</span></header>
+    <div class="tablewrap"><table><thead><tr><th>Aeronave</th><th class="r">Vuelo SAER</th><th class="r">Armilla</th><th class="r">Total real</th><th class="r">Sim VFR</th><th class="r">Sim IFR</th><th class="r">Salidas</th><th class="r">Sesiones sim</th></tr></thead><tbody>${rows}
+    <tr class="total"><td>Total</td><td class="r num">${hm(sum(saer,f=>f.min))}</td><td class="r num">${hm(sum(school,f=>f.min))}</td><td class="r num">${hm(sum(real,f=>f.min))}</td><td class="r num">${hm(sum(sim.filter(f=>f.vuelo==='VFR'),f=>f.min))}</td><td class="r num">${hm(sum(sim.filter(f=>f.vuelo==='IFR'),f=>f.min))}</td><td class="r num">${real.length}</td><td class="r num">${sim.length}</td></tr></tbody></table></div></section>
+  <div class="cols">
+    <section class="panel"><header><h2>Por año</h2><span class="hint">vuelo real</span></header>${yearBars.length?bars(yearBars):'<div class="hint">Sin datos.</div>'}</section>
+    <section class="panel"><header><h2>Por rol</h2><span class="hint">vuelo real</span></header>
+      <div class="tablewrap"><table style="min-width:0"><thead><tr><th>Rol</th><th class="r">Total real</th><th class="r">SAER</th><th class="r">Salidas SAER</th></tr></thead><tbody>${roles.map(r=>{const a=real.filter(f=>f.rol===r), b=a.filter(f=>!isSchool(f)); return `<tr><td><b>${esc(r)}</b></td><td class="r num">${hm(sum(a,f=>f.min))}</td><td class="r num">${hm(sum(b,f=>f.min))}</td><td class="r num">${b.length}</td></tr>`;}).join('')||'<tr><td colspan="4" class="hint">Sin datos.</td></tr>'}</tbody></table></div></section>
+  </div>
+  <section class="panel"><header><h2>Por clave de servicio</h2><span class="hint">las 10 con más horas · horas · salidas</span></header>${misList.length?bars(misList):'<div class="hint">Sin datos.</div>'}</section>`;
+}
+
+function viewVigencias(){
+  const today=todayISO(), r=editingRule||{};
+  const kind=r.kind||'recency';
+  const opt=(v,l,sel)=>`<option value="${esc(v)}"${sel?' selected':''}>${esc(l)}</option>`;
+  return `
+  <section class="panel"><header><h2>Estado de tus requisitos</h2><span class="hint">Se calculan con tus vuelos y la fecha de hoy (${fmtDate(today)})</span></header>
+    ${S.rules.length?`<div class="rules">${S.rules.map(x=>ruleCard(x,today,true)).join('')}</div>`:`<div class="empty">No hay requisitos todavía. Define el primero abajo.</div>`}</section>
+  <section class="panel"><header><h2>${editingRule&&editingRule.id?'Editar requisito':'Nuevo requisito'}</h2><span class="hint">Pon los plazos y mínimos que te correspondan según tu unidad y normativa</span></header>
+    <form id="ruleform" class="grid" novalidate>
+      <div class="fld w6"><label for="r-name">Nombre</label><input id="r-name" value="${esc(r.name||'')}" placeholder="Por ejemplo: actividad en H135 P3H" autocomplete="off"></div>
+      <div class="fld w3"><label for="r-kind">Qué se comprueba</label><select id="r-kind">${opt('recency','Actividad: al menos un vuelo/sesión cada N días',kind==='recency')}${opt('hours','Horas mínimas en un periodo',kind==='hours')}</select></div>
+      <div class="fld w3"><label for="r-tipo">Aeronave</label><select id="r-tipo">${opt('','Cualquiera',!r.tipo)}${[...new Set([...TYPE_ORDER,...types()])].map(t=>opt(t,t,r.tipo===t)).join('')}</select></div>
+      <div class="fld w3"><label for="r-source">Cuenta</label><select id="r-source">${opt('real','Solo vuelo real',(r.source||'real')==='real')}${opt('sim','Solo simulador',r.source==='sim')}${opt('any','Vuelo real y simulador',r.source==='any')}</select></div>
+      <div class="fld w3"><label for="r-days" id="r-days-l">Días</label><input id="r-days" type="number" min="1" inputmode="numeric" value="${r.days||90}"></div>
+      <div class="fld w3 hrs ${kind==='hours'?'':'rulehide'}"><label for="r-hours">Horas mínimas</label><input id="r-hours" type="number" min="0" step="0.25" inputmode="decimal" value="${r.hours||''}"></div>
+      <div class="fld w3 hrs ${kind==='hours'?'':'rulehide'}"><label for="r-cal">Periodo</label><select id="r-cal">${opt('0','Últimos N días',!r.calYear)}${opt('1','Año natural en curso',!!r.calYear)}</select></div>
+      <div class="fld w3"><label for="r-warn">Avisar con (días)</label><input id="r-warn" type="number" min="0" inputmode="numeric" value="${r.warn==null?15:r.warn}"></div>
+      <div class="fld w6"><div class="err" id="r-err"></div><div class="row"><button class="primary" type="submit">${editingRule&&editingRule.id?'Guardar cambios':'Añadir requisito'}</button>${editingRule?'<button type="button" data-act="rule-cancel">Cancelar</button>':''}</div></div>
+    </form></section>`;
+}
+
+function viewVuelos(){
+  const q=(dl&&dl.q)||'', ft=(dl&&dl.ft)||'';
+  const list=S.flights.filter(f=>(!ft||f.tipo===ft)&&(!q||[f.tipo,f.matricula,f.rol,f.mision,f.tripulacion,f.zona,f.obs,fmtDate(f.date)].join(' ').toLowerCase().includes(q.toLowerCase())))
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  return `
+  ${S.demo?`<div class="banner"><b>Datos de ejemplo.</b> Se borran al añadir tu primer vuelo o al importar.</div>`:''}
+  <section class="panel"><header><h2>Vuelos</h2><span class="hint">${list.length} de ${S.flights.length} · ${hm(sum(list,f=>f.min))} h</span></header>
+    <div class="filters"><input id="q" type="search" placeholder="Buscar en todos los campos" value="${esc(q)}" aria-label="Buscar"><select id="ft" aria-label="Filtrar por aeronave"><option value="">Todas las aeronaves</option>${types().map(t=>`<option${t===ft?' selected':''}>${esc(t)}</option>`).join('')}</select></div>
+    <div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Aeronave</th><th>Mat.</th><th>Rol</th><th>Clave</th><th class="r">Horas</th><th>Reglas</th><th>Zona</th><th>Observaciones</th><th></th></tr></thead><tbody>
+    ${list.map(f=>`<tr><td class="num">${fmtDate(f.date)}</td><td>${esc(f.tipo)}</td><td class="num">${esc(f.matricula)}</td><td>${esc(f.rol)}</td><td><span class="tag">${esc(f.mision)}</span></td><td class="r num">${hm(f.min)}</td><td>${esc(f.vuelo)}</td><td>${esc(f.zona)}</td><td class="obs">${esc(f.obs)}${f.tripulacion?`<br>Trip.: ${esc(f.tripulacion)}`:''}</td><td style="white-space:nowrap"><button class="small" data-act="edit" data-id="${f.id}">Editar</button> <button class="small danger" data-act="del" data-id="${f.id}">Borrar</button></td></tr>`).join('')||'<tr><td colspan="10" class="hint">No hay vuelos que coincidan.</td></tr>'}
+    </tbody></table></div></section>`;
+}
+
+function viewAnadir(){
+  const f=editingId?S.flights.find(x=>x.id===editingId):null;
+  const last=[...S.flights].sort((a,b)=>b.date.localeCompare(a.date))[0]||{};
+  const v=f||{date:todayISO(),tipo:last.tipo||'',matricula:last.matricula||'',rol:last.rol||'SIC',mision:'',min:0,vuelo:'VFR',tripulacion:'',zona:'',obs:''};
+  const uniq=k=>[...new Set(S.flights.map(x=>x[k]).filter(Boolean))].sort();
+  const dlist=(id,arr)=>`<datalist id="${id}">${arr.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
+  return `
+  <section class="panel"><header><h2>${f?'Editar vuelo':'Añadir vuelo'}</h2><span class="hint">Horas en formato H:MM (por ejemplo 1:25)</span></header>
+    <form id="flightform" class="grid" novalidate>
+      <div class="fld"><label for="f-date">Fecha</label><input id="f-date" type="date" value="${esc(v.date)}" required></div>
+      <div class="fld"><label for="f-tipo">Aeronave</label><input id="f-tipo" list="dl-tipo" value="${esc(v.tipo)}" autocomplete="off" placeholder="H135 P3H"></div>
+      <div class="fld"><label for="f-mat">Matrícula</label><input id="f-mat" list="dl-mat" value="${esc(v.matricula)}" inputmode="numeric" autocomplete="off"></div>
+      <div class="fld"><label for="f-rol">Rol</label><select id="f-rol">${[...new Set([...ROLES,v.rol].filter(Boolean))].map(r=>`<option${r===v.rol?' selected':''}>${esc(r)}</option>`).join('')}</select></div>
+      <div class="fld"><label for="f-mision">Clave de servicio</label><input id="f-mision" list="dl-mis" value="${esc(v.mision)}" autocomplete="off" placeholder="VO, RE, SIMULADOR..."></div>
+      <div class="fld"><label for="f-horas">Horas</label><input id="f-horas" value="${v.min?hm(v.min):''}" inputmode="text" autocomplete="off" placeholder="1:25"></div>
+      <div class="fld"><label for="f-vuelo">Reglas de vuelo</label><select id="f-vuelo"><option${v.vuelo==='VFR'?' selected':''}>VFR</option><option${v.vuelo==='IFR'?' selected':''}>IFR</option></select></div>
+      <div class="fld w3"><label for="f-trip">Tripulación</label><input id="f-trip" value="${esc(v.tripulacion)}" autocomplete="off"></div>
+      <div class="fld w3"><label for="f-zona">Zona - aeródromo</label><input id="f-zona" list="dl-zona" value="${esc(v.zona)}" autocomplete="off"></div>
+      <div class="fld w6"><label for="f-obs">Observaciones</label><textarea id="f-obs">${esc(v.obs)}</textarea></div>
+      <div class="fld w6"><div class="err" id="f-err"></div><div class="row"><button class="primary" type="submit" data-then="list">${f?'Guardar cambios':'Guardar vuelo'}</button>${f?'<button type="button" data-act="cancel-edit">Cancelar</button>':'<button type="submit" data-then="again">Guardar y añadir otro</button>'}</div></div>
+    </form>
+    ${dlist('dl-tipo',[...new Set([...TYPE_ORDER,...uniq('tipo')])])}${dlist('dl-mat',uniq('matricula'))}${dlist('dl-mis',[...new Set(['SIMULADOR',...uniq('mision')])])}${dlist('dl-zona',uniq('zona'))}
+  </section>`;
+}
+
+function viewDatos(){
+  const sy=S.sync||{url:'',token:'',pendingOps:[]};
+  const connected=!!(sy.url&&sy.token);
+  const npend=(sy.pendingOps||[]).length;
+  return `
+  <section class="panel"><header><h2>Conexión con Google Sheets</h2><span class="hint">${connected?'Conectado':'No conectado'}</span></header>
+    <p class="hint" style="margin-top:0">Pega aquí la URL de tu aplicación web de Apps Script (acaba en <code>/exec</code>) y la clave que puso en el script. A partir de ahí, los vuelos se leen y guardan directamente en tu Hoja de Google real.</p>
+    <div class="grid">
+      <div class="fld w4"><label for="sy-url">URL de la aplicación web</label><input id="sy-url" value="${esc(sy.url)}" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec"></div>
+      <div class="fld w2"><label for="sy-tok">Clave (token)</label><input id="sy-tok" type="password" value="${esc(sy.token)}" autocomplete="off"></div>
+    </div>
+    <div class="row">
+      <button class="primary" data-act="sync-connect">${connected?'Reconectar y traer vuelos':'Conectar y traer vuelos'}</button>
+      ${connected?'<button data-act="sync-now">Sincronizar ahora</button><button class="danger" data-act="sync-off">Desconectar</button>':''}
+    </div>
+    <div class="err" id="sy-err"></div>
+    ${npend?`<p class="hint">${npend} cambio(s) pendientes de subir (se reintentarán solos).</p>`:''}
+    ${connected?'<p class="hint">Mientras está conectado, cada vuelo que añadas, edites o borres aquí se guarda también en tu Hoja de Google.</p>':''}
+  </section>
+  <section class="panel"><header><h2>Importar</h2><span class="hint">Tu Excel (.xlsx), un CSV o una copia de seguridad (.json)</span></header>
+    <p class="hint" style="margin-top:0">El archivo se lee en este dispositivo y no se envía a ningún sitio. En un .xlsx se usa la hoja HORAS y las columnas FECHA, TIPO, MATRÍCULA, ROLL, MISIÓN, HORAS, VUELO, TRIPULACIÓN, ZONA-AERÓDROMO y OBSERVACIONES.</p>
+    <div class="row"><input id="file" type="file" accept=".xlsx,.csv,.json,.txt" style="max-width:420px"></div><div class="err" id="imp-err"></div></section>
+  <section class="panel"><header><h2>Copia de seguridad</h2><span class="hint">${S.flights.length} vuelos · ${S.rules.length} requisitos</span></header>
+    <p class="hint" style="margin-top:0">Tus datos se guardan solo en este navegador y este dispositivo. Si limpias los datos del navegador o cambias de móvil se pierden, así que guarda una copia de vez en cuando.</p>
+    <div class="row">
+      <button class="primary" data-act="save-json" ${dl&&dl.noDl?'disabled':''}>Guardar copia (.json)</button>
+      <button data-act="save-csv" ${dl&&dl.noDl?'disabled':''}>Exportar a Excel (.csv)</button>
+      <button data-act="copy-json">Copiar copia al portapapeles</button>
+    </div>
+    <p class="hint" id="dl-note">${dl&&dl.noDl?'Aquí no se pueden guardar archivos; usa "Copiar copia" y pégala en una nota.':''}</p>
+    <p class="hint">${storageOK?'Guardado automático en este navegador: activo.':'<b style="color:var(--late)">El guardado automático no está disponible aquí.</b>'}</p></section>
+  <section class="panel"><header><h2>Borrar todo</h2></header><button class="danger" data-act="wipe">Borrar todos mis datos</button></section>`;
+}
+
+/* ---------- routing / render ---------- */
+const VIEWS={resumen:viewResumen,vigencias:viewVigencias,vuelos:viewVuelos,anadir:viewAnadir,datos:viewDatos};
+function tab(){ const h=location.hash.slice(1); return VIEWS[h]?h:'resumen'; }
+function render(){
+  const t=tab();
+  document.querySelectorAll('#nav a').forEach(a=>{ if(a.dataset.tab===t) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  $('#app').innerHTML=VIEWS[t]();
+  if(t!=='anadir'&&editingId&&t!=='vigencias') editingId=null;
+}
+window.addEventListener('hashchange',()=>{ if(tab()!=='anadir') editingId=null; if(tab()!=='vigencias') editingRule=null; render(); window.scrollTo(0,0); });
+
+/* ---------- events ---------- */
+document.addEventListener('input',e=>{
+  if(e.target.id==='q'||e.target.id==='ft'){
+    dl=Object.assign(dl||{},{q:$('#q').value,ft:$('#ft').value});
+    const pos=e.target.selectionStart, id=e.target.id; render(); const el=$('#'+id); el.focus(); try{el.setSelectionRange(pos,pos);}catch(_){}
+  }
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='r-kind'){
+    const h=e.target.value==='hours';
+    document.querySelectorAll('.hrs').forEach(x=>x.classList.toggle('rulehide',!h));
+  }
+  if(e.target.id==='file'&&e.target.files[0]) onFile(e.target.files[0]);
+});
+let submitter=null;
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.type==='submit') submitter=b.dataset.then||'list';
+  const act=b.dataset.act; if(!act) return;
+  const id=b.dataset.id;
+  if(act==='edit'){ editingId=id; location.hash='anadir'; if(tab()==='anadir') render(); }
+  else if(act==='cancel-edit'){ editingId=null; location.hash='vuelos'; }
+  else if(act==='del'){ pending=id; const f=S.flights.find(x=>x.id===id); modal(`<h3>Borrar vuelo</h3><div>${fmtDate(f.date)} · ${esc(f.tipo)} · ${esc(f.mision)} · ${hm(f.min)} h</div><div class="row"><button class="danger" data-act="del-ok">Borrar</button><button data-act="modal-x">Cancelar</button></div>`); }
+  else if(act==='del-ok'){
+    const f=S.flights.find(x=>x.id===pending);
+    S.flights=S.flights.filter(x=>x.id!==pending);
+    save(); closeModal(); render(); toast('Vuelo borrado');
+    if(f&&syncConfigured()){
+      if(f.rowId){
+        try{ await apiPost('delete',{rowId:f.rowId,fecha:f.date}); await syncPullAll(); render(); }
+        catch(e){
+          if(e.server){ toast('La hoja no aceptó el borrado: '+e.message); try{ await syncPullAll(); render(); }catch(_){} }
+          else queuePending('delete',null,f.rowId,f.date);
+        }
+      }
+    }
+  }
+  else if(act==='modal-x') closeModal();
+  else if(act==='rule-edit'){ editingRule=S.rules.find(x=>x.id===id); render(); window.scrollTo(0,document.body.scrollHeight); }
+  else if(act==='rule-cancel'){ editingRule=null; render(); }
+  else if(act==='rule-del'){ S.rules=S.rules.filter(x=>x.id!==id); save(); render(); toast('Requisito borrado'); }
+  else if(act==='save-json') saveFile('libro-de-vuelo.json',JSON.stringify({version:1,flights:S.flights,rules:S.rules},null,1));
+  else if(act==='save-csv') saveFile('libro-de-vuelo.csv',toCSV());
+  else if(act==='copy-json') copyText(JSON.stringify({version:1,flights:S.flights,rules:S.rules}));
+  else if(act==='wipe'){ modal(`<h3>Borrar todos los datos</h3><div>Se eliminarán todos tus vuelos y requisitos de este navegador. No se puede deshacer.</div><div class="row"><button class="danger" data-act="wipe-ok">Borrar todo</button><button data-act="modal-x">Cancelar</button></div>`); }
+  else if(act==='wipe-ok'){ S={flights:[],rules:[],demo:false,sync:{url:'',token:'',pendingOps:[]}}; save(); closeModal(); render(); toast('Datos borrados'); }
+  else if(act==='sync-connect'){
+    const url=($('#sy-url')||{}).value?.trim(), tok=($('#sy-tok')||{}).value?.trim();
+    const errEl=$('#sy-err');
+    if(!url||!tok){ if(errEl) errEl.textContent='Completa la URL y la clave.'; return; }
+    if(errEl) errEl.textContent='Conectando…';
+    try{ await connectSync(url,tok); render(); toast('Conectado. Vuelos sincronizados.'); }
+    catch(ex){ const e2=$('#sy-err'); if(e2) e2.textContent='No se pudo conectar: '+ex.message; }
+  }
+  else if(act==='sync-now'){
+    const errEl=$('#sy-err');
+    try{ await drainPending(); await syncPullAll(); render(); toast('Sincronizado'); }
+    catch(ex){ if(errEl) errEl.textContent='No se pudo sincronizar: '+ex.message; }
+  }
+  else if(act==='sync-off'){ disconnectSync(); render(); toast('Desconectado de Google Sheets'); }
+  else if(act==='imp-replace'||act==='imp-add'){
+    const inc=pending.flights;
+    if(act==='imp-replace'||S.demo){ S.flights=[]; if(S.demo) leaveDemo(); }
+    const key=f=>[f.date,f.tipo,f.matricula,f.rol,f.mision,f.min,f.vuelo,f.zona,f.obs].join('|');
+    const have=new Set(S.flights.map(key)); let added=0;
+    inc.forEach(f=>{ if(act==='imp-replace'||!have.has(key(f))){ S.flights.push(f); have.add(key(f)); added++; } });
+    if(pending.rules&&pending.rules.length&&act==='imp-replace') S.rules=pending.rules;
+    S.demo=false; save(); closeModal(); location.hash='resumen'; render(); toast(`${added} vuelos importados`);
+  }
+});
+$('#modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+document.addEventListener('submit',e=>{
+  e.preventDefault();
+  if(e.target.id==='flightform') onFlightSubmit();
+  else if(e.target.id==='ruleform') onRuleSubmit();
+});
+async function onFlightSubmit(){
+  const g=id=>$('#'+id).value.trim(), err=m=>{ $('#f-err').textContent=m; };
+  const date=g('f-date'), min=parseHM(g('f-horas'));
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err('Indica la fecha.');
+  if(!g('f-tipo')) return err('Indica la aeronave.');
+  if(!g('f-mision')) return err('Indica la clave de servicio (o SIMULADOR).');
+  if(!(min>0)) return err('Las horas deben tener formato H:MM, por ejemplo 1:25.');
+  const rec={date,tipo:g('f-tipo'),matricula:g('f-mat'),rol:$('#f-rol').value,mision:g('f-mision').toUpperCase(),min,vuelo:$('#f-vuelo').value,tripulacion:g('f-trip'),zona:g('f-zona'),obs:g('f-obs')};
+  let f, wasEdit=false;
+  if(editingId){ const i=S.flights.findIndex(x=>x.id===editingId); S.flights[i]=Object.assign({},S.flights[i],rec); f=S.flights[i]; wasEdit=true; editingId=null; }
+  else { leaveDemo(); f=Object.assign({id:uid()},rec); S.flights.push(f); }
+  save(); toast('Vuelo guardado');
+  const then=submitter;
+  if(then==='again'){ render(); $('#f-horas').focus(); } else location.hash='vuelos';
+  if(syncConfigured()){
+    try{
+      const res=await apiPost((wasEdit&&f.rowId)?'update':'add',localToRemote(f));
+      if(res.flight&&res.flight.rowId){ f.rowId=res.flight.rowId; save(); }
+    }catch(ex){
+      if(ex.server){ toast('La hoja no aceptó el cambio: '+ex.message); try{ await syncPullAll(); render(); }catch(_){} }
+      else queuePending(wasEdit?'update':'add',f.id);
+    }
+  }
+}
+function onRuleSubmit(){
+  const g=id=>$('#'+id).value.trim(), err=m=>{ $('#r-err').textContent=m; };
+  const kind=g('r-kind'), days=parseInt(g('r-days'),10), hours=parseFloat(g('r-hours').replace(',','.')), cal=g('r-cal')==='1';
+  if(!g('r-name')) return err('Ponle un nombre al requisito.');
+  if(!(days>0)&&!(kind==='hours'&&cal)) return err('Indica un número de días mayor que 0.');
+  if(kind==='hours'&&!(hours>0)) return err('Indica las horas mínimas.');
+  const rec={name:g('r-name'),kind,tipo:g('r-tipo'),source:g('r-source'),days:days||365,hours:kind==='hours'?hours:0,calYear:kind==='hours'&&cal,warn:Math.max(0,parseInt(g('r-warn'),10)||0)};
+  if(editingRule&&editingRule.id){ const i=S.rules.findIndex(x=>x.id===editingRule.id); S.rules[i]=Object.assign({},S.rules[i],rec,{demo:false}); }
+  else S.rules.push(Object.assign({id:uid()},rec));
+  editingRule=null; save(); render(); toast('Requisito guardado');
+}
+
+/* ---------- import / export ---------- */
+async function onFile(file){
+  const err=m=>{ const el=$('#imp-err'); if(el) el.textContent=m; };
+  err('');
+  try{
+    const name=file.name.toLowerCase(); let res;
+    if(name.endsWith('.xlsx')){ const x=await readXlsx(await file.arrayBuffer()); res=tableToFlights(x.header,x.rows); res.note=`Hoja «${x.sheet}»`; }
+    else if(name.endsWith('.json')){
+      const o=JSON.parse(await file.text());
+      if(!o||!Array.isArray(o.flights)) throw new Error('El JSON no es una copia de este libro de vuelo.');
+      res={flights:o.flights.map(f=>Object.assign({id:uid()},f)).filter(f=>f.date&&f.min>0),skipped:0,rules:o.rules||[],note:'Copia de seguridad'};
+    } else { const rows=parseCSV(await file.text()); res=tableToFlights(rows[0]||[],rows.slice(1)); res.note='CSV'; }
+    if(!res.flights.length) throw new Error('No he encontrado ningún vuelo válido en el archivo.');
+    pending=res;
+    const ds=res.flights.map(f=>f.date).sort(), tot=sum(res.flights.filter(f=>!isSim(f)),f=>f.min);
+    modal(`<h3>Importar ${res.flights.length} vuelos</h3><div>${esc(res.note)} · del ${fmtDate(ds[0])} al ${fmtDate(ds[ds.length-1])}<br>Vuelo real: <b class="num">${hm(tot)} h</b>${res.skipped?`<br><span class="hint">${res.skipped} filas omitidas por no tener fecha u horas válidas.</span>`:''}</div>
+      <div class="hint">${S.demo?'Los datos de ejemplo se sustituirán.':'Reemplazar borra tus datos actuales; Añadir mantiene los actuales y salta los duplicados.'}</div>
+      <div class="row"><button class="primary" data-act="imp-replace">${S.demo?'Importar':'Reemplazar mis datos'}</button>${S.demo?'':'<button data-act="imp-add">Añadir a los actuales</button>'}<button data-act="modal-x">Cancelar</button></div>`);
+  }catch(ex){ err('No se pudo importar: '+ex.message); }
+  const fi=$('#file'); if(fi) fi.value='';
+}
+function toCSV(){
+  const q=v=>{ v=String(v==null?'':v); return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  const head=['FECHA','TIPO','MATRÍCULA','ROLL','MISIÓN','HORAS','VUELO','TRIPULACIÓN','ZONA-AERÓDROMO','OBSERVACIONES'];
+  const body=[...S.flights].sort((a,b)=>a.date.localeCompare(b.date)).map(f=>[fmtDate(f.date),f.tipo,f.matricula,f.rol,f.mision,hm(f.min),f.vuelo,f.tripulacion,f.zona,f.obs].map(q).join(';'));
+  return '﻿'+[head.join(';'),...body].join('\r\n');
+}
+async function saveFile(name,data){
+  try{
+    const type=name.endsWith('.json')?'application/json':'text/csv;charset=utf-8';
+    const blob=new Blob([data],{type});
+    const file=new File([blob],name,{type});
+    if(/iPhone|iPad|Android/i.test(navigator.userAgent)&&navigator.canShare&&navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file],title:name}); toast('Copia compartida'); return; }catch(e){ if(e&&e.name==='AbortError') return; }
+    }
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    toast('Archivo generado');
+  }catch(e){ toast('No se pudo guardar el archivo. Prueba con Copiar copia.'); }
+}
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); toast('Copia en el portapapeles'); }
+  catch(e){ modal(`<h3>Copia de seguridad</h3><div class="hint">Selecciona todo el texto y cópialo.</div><textarea id="bk" readonly rows="6">${esc(t)}</textarea><div class="row"><button data-act="modal-x">Cerrar</button></div>`); const b=$('#bk'); if(b){ b.focus(); b.select(); } }
+}
+
+/* ---------- boot ---------- */
+(function(){
+  load(); render();
+  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(_){}
+  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  // Enlace de configuración de un toque: index.html#conectar=<base64 de {"u":url,"t":token}>
+  // (lo que va tras # nunca se envía al servidor ni se guarda en GitHub)
+  const mh=location.hash.match(/^#conectar=(.+)$/);
+  if(mh){
+    try{
+      const c=JSON.parse(atob(decodeURIComponent(mh[1])));
+      history.replaceState(null,'',location.pathname+location.search+'#datos');
+      if(c.u&&c.t){
+        toast('Conectando con tu Hoja de Google…');
+        connectSync(c.u,c.t).then(()=>{ location.hash='resumen'; render(); toast('Conectado: '+S.flights.length+' vuelos sincronizados'); })
+          .catch(ex=>{ render(); toast('No se pudo conectar: '+ex.message); });
+        return;
+      }
+    }catch(_){}
+  }
+  if(syncConfigured()){
+    drainPending().then(()=>syncPullAll()).then(()=>{ render(); }).catch(()=>{});
+  }
+})();
+</script>
+</body>
+</html>
