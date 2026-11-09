@@ -9,9 +9,9 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Libro de vuelo">
+<meta name="apple-mobile-web-app-title" content="Logbook">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Libro de Vuelo</title>
+<title>Logbook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -137,12 +137,28 @@ button:hover{filter:brightness(.96)}
 #toast.on{opacity:1}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
 .rulehide{display:none}
+.syncpill{align-self:center;margin-left:auto;font:600 11px var(--body);letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.syncpill.ok{color:var(--ok);border-color:var(--ok)} .syncpill.warn{color:var(--warn);border-color:var(--warn)} .syncpill.off{color:var(--muted)}
+.cdesc{display:block;font-size:11px;color:var(--muted);line-height:1.25;margin-top:2px;max-width:170px}
+.rescue{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.rescue .odo{min-height:120px}
+.rescue .odo .val{font-size:clamp(46px,8vw,68px)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font:500 11px var(--mono);padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
+.misdesc{font-size:12px;color:var(--muted);min-height:1.2em}
+.cadlist{display:flex;flex-direction:column;gap:0}
+.cadrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.cadrow:last-child{border-bottom:0}
+.cadrow .n{font-weight:600}
+.cadrow .d{font:500 14px var(--mono);color:var(--muted)}
+@media (max-width:720px){.rescue{grid-template-columns:1fr 1fr;gap:10px}.rescue .odo{padding:12px 14px;min-height:110px}}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="bar">
-    <div class="brand">Libro de vuelo<small>REGISTRO PERSONAL DE HORAS</small></div>
+    <div class="brand">Logbook<small>REGISTRO PERSONAL DE HORAS</small></div>
+    <span id="syncpill" class="syncpill" aria-live="polite"></span>
     <nav id="nav" aria-label="Secciones">
       <a href="#resumen" data-tab="resumen">Resumen</a>
       <a href="#vigencias" data-tab="vigencias">Vigencias</a>
@@ -177,7 +193,6 @@ const fmtDate=iso=>iso?`${iso.slice(8,10)}/${iso.slice(5,7)}/${iso.slice(0,4)}`:
 const todayISO=()=>{const d=new Date();return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const isSim=f=>String(f.mision||'').toUpperCase()==='SIMULADOR';
-const isSchool=f=>/^ARMILLA/i.test(String(f.zona||'').trim());
 
 function parseDateAny(v){
   if(v==null||v==='') return '';
@@ -354,7 +369,7 @@ function seed(){
 function load(){
   try{
     const raw=localStorage.getItem(KEY);
-    if(raw){ const o=JSON.parse(raw); if(o&&Array.isArray(o.flights)){ S={flights:o.flights,rules:o.rules||[],demo:!!o.demo,sync:o.sync||{url:'',token:'',pendingOps:[]}}; return; } }
+    if(raw){ const o=JSON.parse(raw); if(o&&Array.isArray(o.flights)){ S={flights:o.flights,rules:o.rules||[],demo:!!o.demo,sync:o.sync||{url:'',token:'',pendingOps:[]},claves:o.claves||[],cad:o.cad||[]}; return; } }
   }catch(e){ storageOK=false; }
   seed();
 }
@@ -384,16 +399,19 @@ async function apiPost(action,payload){
   return j;
 }
 function remoteToLocal(r){
-  return {id:uid(),rowId:r.rowId,date:r.fecha,tipo:r.tipo||'',matricula:r.matricula||'',rol:r.rol||'',mision:r.clave||'',min:r.min||0,vuelo:r.vuelo||'',tripulacion:r.tripulacion||'',zona:r.zona||'',obs:r.obs||''};
+  return {id:uid(),rowId:r.rowId,date:r.fecha,tipo:r.tipo||'',matricula:r.matricula||'',rol:r.rol||'',mision:r.clave||'',min:r.min||0,vuelo:r.vuelo||'',tripulacion:r.tripulacion||'',zona:r.zona||'',obs:r.obs||'',ciclos:r.ciclos||0,heridos:r.heridos||0,fallecidos:r.fallecidos||0};
 }
 function localToRemote(f){
-  return {rowId:f.rowId,fecha:f.date,tipo:f.tipo||'',matricula:f.matricula||'',rol:f.rol||'',clave:f.mision||'',min:f.min||0,vuelo:f.vuelo||'',tripulacion:f.tripulacion||'',zona:f.zona||'',obs:f.obs||''};
+  return {rowId:f.rowId,fecha:f.date,tipo:f.tipo||'',matricula:f.matricula||'',rol:f.rol||'',clave:f.mision||'',min:f.min||0,vuelo:f.vuelo||'',tripulacion:f.tripulacion||'',zona:f.zona||'',obs:f.obs||'',ciclos:f.ciclos||0,heridos:f.heridos||0,fallecidos:f.fallecidos||0};
 }
 async function syncPullAll(){
   const res=await apiGet('todo');
   S.flights=(res.flights||[]).map(remoteToLocal);
   S.rules=(S.rules||[]).filter(r=>!r.demo);
+  if(Array.isArray(res.claves)) S.claves=res.claves;
+  if(Array.isArray(res.caducidades)) S.cad=res.caducidades;
   S.demo=false;
+  S.sync.lastOk=Date.now();
   save();
   return res;
 }
@@ -443,6 +461,28 @@ function types(){
 function ago(iso,today){ if(!iso) return '—'; const n=diffDays(today,iso); return `${fmtDate(iso)} · ${n===0?'hoy':'hace '+n+' d'}`; }
 function winMin(list,today,days){ const from=addDays(today,-days+1); return sum(list.filter(f=>f.date>=from&&f.date<=today),f=>f.min); }
 function lastOf(list){ return list.reduce((a,f)=>f.date>a?f.date:a,''); }
+function claveDesc(k){
+  k=String(k||'').toUpperCase().trim(); if(!k) return '';
+  const c=(S.claves||[]).find(x=>String(x.clave).toUpperCase().trim()===k);
+  return (c&&c.descripcion)||MISSION_NAMES[k]||'';
+}
+const nInt=v=>{ const n=parseInt(v,10); return isFinite(n)&&n>0?n:0; };
+const rescatados=f=>nInt(f.heridos)+nInt(f.fallecidos);
+function addMonthsISO(iso,m){ const y=+iso.slice(0,4), mo=+iso.slice(5,7)-1+m, d=+iso.slice(8,10); const t=new Date(Date.UTC(y,mo,1)); const last=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+1,0)).getUTCDate(); return `${t.getUTCFullYear()}-${pad2(t.getUTCMonth()+1)}-${pad2(Math.min(d,last))}`; }
+const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+function updateSyncPill(){
+  const el=document.getElementById('syncpill'); if(!el) return;
+  const np=(S.sync&&S.sync.pendingOps||[]).length;
+  let cls='off', txt='Solo en este móvil';
+  if(syncConfigured()){
+    if(!navigator.onLine){ cls='warn'; txt=np?`Sin conexión · ${np} pendiente${np>1?'s':''}`:'Sin conexión'; }
+    else if(np){ cls='warn'; txt=`${np} pendiente${np>1?'s':''} de subir`; }
+    else { cls='ok'; txt='✓ Guardado en tu hoja'; }
+  }
+  el.className='syncpill '+cls; el.textContent=txt;
+}
+window.addEventListener('online',()=>{ updateSyncPill(); if(syncConfigured()) drainPending().then(()=>syncPullAll()).then(render).catch(()=>{}); });
+window.addEventListener('offline',updateSyncPill);
 function bars(items,fmtKey){
   const max=Math.max(1,...items.map(i=>i.min));
   return `<div class="bars">${items.map(i=>`<div class="brow"><span class="k" title="${esc(i.title||i.key)}">${esc(fmtKey?fmtKey(i.key):i.key)}</span><span class="track"><span class="fill" style="display:block;width:${(i.min/max*100).toFixed(1)}%"></span></span><span class="v num">${hm(i.min)} h${i.n!=null?` · ${i.n}`:''}</span></div>`).join('')}</div>`;
@@ -455,73 +495,77 @@ function ruleCard(r,today,manage){
   return `<div class="rule ${e.state}"><span class="pill">${label}</span><div class="name">${esc(r.name)}</div><div class="head">${esc(e.head)}</div><div class="det">${esc(e.detail)}</div>${manage?`<div class="acts"><button class="small" data-act="rule-edit" data-id="${r.id}">Editar</button><button class="small danger" data-act="rule-del" data-id="${r.id}">Borrar</button></div>`:''}</div>`;
 }
 function viewResumen(){
-  const today=todayISO();
+  const today=todayISO(), year=today.slice(0,4);
   const real=S.flights.filter(f=>!isSim(f)), sim=S.flights.filter(isSim);
-  const saer=real.filter(f=>!isSchool(f)), school=real.filter(isSchool);
   const lastReal=lastOf(real);
   const ts=types();
-  const order=[...S.rules].map(r=>({r,e:evalRule(r,S.flights,today)})).sort((a,b)=>({late:0,warn:1,ok:2}[a.e.state]-{late:0,warn:1,ok:2}[b.e.state]));
-  const nl=order.filter(x=>x.e.state==='late').length, nw=order.filter(x=>x.e.state==='warn').length;
   const years=[...new Set(S.flights.map(f=>f.date.slice(0,4)))].sort().reverse();
-  const roles=[...new Set(S.flights.map(f=>f.rol).filter(Boolean))].sort((a,b)=>(ROLES.indexOf(a)<0?9:ROLES.indexOf(a))-(ROLES.indexOf(b)<0?9:ROLES.indexOf(b)));
-  const mis={}; real.forEach(f=>{const k=f.mision||'—'; (mis[k]=mis[k]||{key:k,min:0,n:0}); mis[k].min+=f.min; mis[k].n++;});
-  const misList=Object.values(mis).sort((a,b)=>b.min-a.min).slice(0,10).map(m=>({...m,title:MISSION_NAMES[m.key]||m.key}));
   const yearBars=years.map(y=>({key:y,min:sum(real.filter(f=>f.date.startsWith(y)),f=>f.min)}));
+  const monthBars=MESES.map((m,i)=>{ const pre=`${year}-${pad2(i+1)}`; const a=real.filter(f=>f.date.startsWith(pre)); return {key:m,min:sum(a,f=>f.min),n:a.length}; });
+  const ciclos=sum(S.flights,f=>nInt(f.ciclos)), her=sum(S.flights,f=>nInt(f.heridos)), fal=sum(S.flights,f=>nInt(f.fallecidos));
+  const ciclosY=sum(S.flights.filter(f=>f.date.startsWith(year)),f=>nInt(f.ciclos)), rescY=sum(S.flights.filter(f=>f.date.startsWith(year)),rescatados);
+  const desg=[her?`${her} herido${her>1?'s':''}`:'',fal?`${fal} fallecido${fal>1?'s':''}`:''].filter(Boolean).join(' · ')||'sin rescates anotados';
+  const mis={}; real.forEach(f=>{const k=(f.mision||'—').toUpperCase(); (mis[k]=mis[k]||{k,min:0,n:0,c:0,r:0}); mis[k].min+=f.min; mis[k].n++; mis[k].c+=nInt(f.ciclos); mis[k].r+=rescatados(f);});
+  const misList=Object.values(mis).sort((a,b)=>b.min-a.min);
   const rows=ts.map(t=>{
     const r=real.filter(f=>f.tipo===t), s=sim.filter(f=>f.tipo===t);
-    const sa=r.filter(f=>!isSchool(f)), sc=r.filter(isSchool);
-    return `<tr><td><b>${esc(t)}</b></td><td class="r num">${hm(sum(sa,f=>f.min))}</td><td class="r num">${hm(sum(sc,f=>f.min))}</td><td class="r num"><b>${hm(sum(r,f=>f.min))}</b></td><td class="r num">${hm(sum(s.filter(f=>f.vuelo==='VFR'),f=>f.min))}</td><td class="r num">${hm(sum(s.filter(f=>f.vuelo==='IFR'),f=>f.min))}</td><td class="r num">${r.length}</td><td class="r num">${s.length}</td></tr>`;
+    return `<tr><td><b>${esc(t)}</b></td><td class="r num"><b>${hm(sum(r,f=>f.min))}</b></td><td class="r num">${r.length}</td><td class="r num">${sum(r,f=>nInt(f.ciclos))}</td><td class="r num">${hm(sum(s,f=>f.min))}</td><td class="r num">${s.length}</td></tr>`;
   }).join('');
   const act=ts.map(t=>{
     const r=real.filter(f=>f.tipo===t), s=sim.filter(f=>f.tipo===t);
     return `<tr><td><b>${esc(t)}</b></td><td class="num">${ago(lastOf(r),today)}</td><td class="num">${ago(lastOf(s),today)}</td><td class="r num">${hm(winMin(r,today,30))}</td><td class="r num">${hm(winMin(r,today,90))}</td><td class="r num">${hm(winMin(r,today,365))}</td></tr>`;
   }).join('');
-  const sh=(a,b)=>`${hm(sum(a,f=>f.min))} ${b}`;
+  const avg=real.length?Math.round(sum(real,f=>f.min)/real.length):0;
   return `
-  ${S.demo?`<div class="banner"><b>Datos de ejemplo.</b> Lo que ves es ficticio. En <a href="#datos">Datos</a> puedes importar tu Excel, o añadir tu primer vuelo y los ejemplos desaparecen.</div>`:''}
-  ${!storageOK?`<div class="banner"><b>Este navegador no guarda datos aquí.</b> Lo que añadas se perderá al cerrar. Usa Datos &rarr; Copia de seguridad después de cada sesión.</div>`:''}
+  ${S.demo?`<div class="banner"><b>Datos de ejemplo.</b> Lo que ves es ficticio. Conecta tu Hoja de Google en <a href="#datos">Datos</a> o añade tu primer vuelo y los ejemplos desaparecen.</div>`:''}
+  ${!storageOK?`<div class="banner"><b>Este navegador no guarda datos aquí.</b> Lo que añadas se perderá al cerrar.</div>`:''}
   <section class="panel"><div class="hero">
-    <div class="odo"><span class="lbl">Total vuelo real</span><span class="val">${hm(sum(real,f=>f.min))}<small>H</small></span><span class="sub">${sh(saer,'vuelo SAER')} · ${sh(school,'escuela Armilla')}</span></div>
+    <div class="odo"><span class="lbl">Horas de vuelo</span><span class="val">${hm(sum(real,f=>f.min))}<small>H</small></span><span class="sub">${real.length} salidas · ${hm(sum(real.filter(f=>f.date.startsWith(year)),f=>f.min))} h en ${year}</span></div>
     <div class="tiles">
-      <div class="tile"><span class="lbl">Simulador (aparte)</span><span class="val">${hm(sum(sim,f=>f.min))}</span><span class="sub">${sim.length} ${sim.length===1?'sesión':'sesiones'}</span></div>
-      <div class="tile"><span class="lbl">Salidas reales</span><span class="val">${real.length}</span><span class="sub">${saer.length} SAER · ${school.length} escuela</span></div>
-      <div class="tile"><span class="lbl">Último vuelo real</span><span class="val" style="font-size:19px">${lastReal?fmtDate(lastReal):'—'}</span><span class="sub">${lastReal?(diffDays(today,lastReal)===0?'hoy':'hace '+diffDays(today,lastReal)+' días'):'sin registros'}</span></div>
+      <div class="tile"><span class="lbl">Simulador</span><span class="val">${hm(sum(sim,f=>f.min))}</span><span class="sub">${sim.length} ${sim.length===1?'sesión':'sesiones'}</span></div>
+      <div class="tile"><span class="lbl">Salidas</span><span class="val">${real.length}</span><span class="sub">media ${hm(avg)} h por salida</span></div>
+      <div class="tile"><span class="lbl">Último vuelo</span><span class="val" style="font-size:19px">${lastReal?fmtDate(lastReal):'—'}</span><span class="sub">${lastReal?(diffDays(today,lastReal)===0?'hoy':'hace '+diffDays(today,lastReal)+' días'):'sin registros'}</span></div>
       <div class="tile"><span class="lbl">Últimos 90 días</span><span class="val">${hm(winMin(real,today,90))}</span><span class="sub">${hm(winMin(real,today,365))} en 365 días</span></div>
     </div></div></section>
-  <section class="panel"><header><h2>Vigencias</h2><span class="hint">${S.rules.length?`${nl} no cumple${nl===1?'':'n'} · ${nw} en atención · <a href="#vigencias">gestionar</a>`:'<a href="#vigencias">Añadir requisitos</a>'}</span></header>
-    ${order.length?`<div class="rules">${order.map(x=>ruleCard(x.r,today,false)).join('')}</div>`:`<div class="empty">Aún no hay requisitos. Añade los tuyos (actividad mínima, horas mínimas) en <a href="#vigencias">Vigencias</a> y aquí verás su estado.</div>`}</section>
-  <section class="panel"><header><h2>Actividad reciente por aeronave</h2><span class="hint">Horas reales en ventanas móviles</span></header>
-    <div class="tablewrap"><table><thead><tr><th>Aeronave</th><th>Último vuelo real</th><th>Último simulador</th><th class="r">30 d</th><th class="r">90 d</th><th class="r">365 d</th></tr></thead><tbody>${act||'<tr><td colspan="6" class="hint">Sin datos.</td></tr>'}</tbody></table></div></section>
-  <section class="panel"><header><h2>Horas por aeronave</h2><span class="hint">SAER = vuelo real fuera de Armilla</span></header>
-    <div class="tablewrap"><table><thead><tr><th>Aeronave</th><th class="r">Vuelo SAER</th><th class="r">Armilla</th><th class="r">Total real</th><th class="r">Sim VFR</th><th class="r">Sim IFR</th><th class="r">Salidas</th><th class="r">Sesiones sim</th></tr></thead><tbody>${rows}
-    <tr class="total"><td>Total</td><td class="r num">${hm(sum(saer,f=>f.min))}</td><td class="r num">${hm(sum(school,f=>f.min))}</td><td class="r num">${hm(sum(real,f=>f.min))}</td><td class="r num">${hm(sum(sim.filter(f=>f.vuelo==='VFR'),f=>f.min))}</td><td class="r num">${hm(sum(sim.filter(f=>f.vuelo==='IFR'),f=>f.min))}</td><td class="r num">${real.length}</td><td class="r num">${sim.length}</td></tr></tbody></table></div></section>
-  <div class="cols">
-    <section class="panel"><header><h2>Por año</h2><span class="hint">vuelo real</span></header>${yearBars.length?bars(yearBars):'<div class="hint">Sin datos.</div>'}</section>
-    <section class="panel"><header><h2>Por rol</h2><span class="hint">vuelo real</span></header>
-      <div class="tablewrap"><table style="min-width:0"><thead><tr><th>Rol</th><th class="r">Total real</th><th class="r">SAER</th><th class="r">Salidas SAER</th></tr></thead><tbody>${roles.map(r=>{const a=real.filter(f=>f.rol===r), b=a.filter(f=>!isSchool(f)); return `<tr><td><b>${esc(r)}</b></td><td class="r num">${hm(sum(a,f=>f.min))}</td><td class="r num">${hm(sum(b,f=>f.min))}</td><td class="r num">${b.length}</td></tr>`;}).join('')||'<tr><td colspan="4" class="hint">Sin datos.</td></tr>'}</tbody></table></div></section>
-  </div>
-  <section class="panel"><header><h2>Por clave de servicio</h2><span class="hint">las 10 con más horas · horas · salidas</span></header>${misList.length?bars(misList):'<div class="hint">Sin datos.</div>'}</section>`;
+  <section class="panel"><header><h2>Rescate</h2><span class="hint">grúa y personas rescatadas</span></header>
+    <div class="rescue">
+      <div class="odo"><span class="lbl">Ciclos de grúa</span><span class="val">${ciclos}</span><span class="sub">${ciclosY} en ${year}</span></div>
+      <div class="odo"><span class="lbl">Rescatados</span><span class="val">${her+fal}</span><span class="sub">${desg}</span></div>
+    </div></section>
+  <section class="panel"><header><h2>${year} por meses</h2><span class="hint">horas · salidas</span></header>${bars(monthBars)}</section>
+  <section class="panel"><header><h2>Actividad reciente por aeronave</h2><span class="hint">horas en ventanas móviles</span></header>
+    <div class="tablewrap"><table><thead><tr><th>Aeronave</th><th>Último vuelo</th><th>Último simulador</th><th class="r">30 d</th><th class="r">90 d</th><th class="r">365 d</th></tr></thead><tbody>${act||'<tr><td colspan="6" class="hint">Sin datos.</td></tr>'}</tbody></table></div></section>
+  <section class="panel"><header><h2>Horas por aeronave</h2></header>
+    <div class="tablewrap"><table><thead><tr><th>Aeronave</th><th class="r">Horas</th><th class="r">Salidas</th><th class="r">Ciclos grúa</th><th class="r">Simulador</th><th class="r">Sesiones sim</th></tr></thead><tbody>${rows}
+    <tr class="total"><td>Total</td><td class="r num">${hm(sum(real,f=>f.min))}</td><td class="r num">${real.length}</td><td class="r num">${ciclos}</td><td class="r num">${hm(sum(sim,f=>f.min))}</td><td class="r num">${sim.length}</td></tr></tbody></table></div></section>
+  <section class="panel"><header><h2>Por clave de servicio</h2><span class="hint">horas · salidas · grúa · rescatados</span></header>
+    <div class="tablewrap"><table style="min-width:420px"><thead><tr><th>Clave</th><th class="r">Horas</th><th class="r">Salidas</th><th class="r">Grúa</th><th class="r">Resc.</th></tr></thead><tbody>${misList.map(m=>`<tr><td><span class="tag">${esc(m.k)}</span>${claveDesc(m.k)?`<span class="cdesc">(${esc(claveDesc(m.k))})</span>`:''}</td><td class="r num">${hm(m.min)}</td><td class="r num">${m.n}</td><td class="r num">${m.c||''}</td><td class="r num">${m.r||''}</td></tr>`).join('')||'<tr><td colspan="5" class="hint">Sin datos.</td></tr>'}</tbody></table></div></section>
+  <section class="panel"><header><h2>Por año</h2><span class="hint">horas de vuelo</span></header>${yearBars.length?bars(yearBars):'<div class="hint">Sin datos.</div>'}</section>`;
 }
 
 function viewVigencias(){
-  const today=todayISO(), r=editingRule||{};
-  const kind=r.kind||'recency';
-  const opt=(v,l,sel)=>`<option value="${esc(v)}"${sel?' selected':''}>${esc(l)}</option>`;
+  const today=todayISO();
+  const cad=S.cad||[];
+  const get=c=>cad.find(x=>x.concepto===c);
+  const cima=get('Reconocimiento médico (CIMA)');
+  let cimaCard='';
+  if(cima&&cima.ultima){
+    const vence=addMonthsISO(cima.ultima,cima.meses||12), d=diffDays(vence,today);
+    const st=d<0?'late':d<=60?'warn':'ok', lbl={ok:'En vigor',warn:'Renovar pronto',late:'Caducado'}[st];
+    cimaCard=`<div class="rule ${st}"><span class="pill">${lbl}</span><div class="name">Reconocimiento médico CIMA</div><div class="head">${d<0?`Caducó hace ${-d} días`:`Quedan ${d} días`}</div><div class="det">Último: ${fmtDate(cima.ultima)} · vence el ${fmtDate(vence)} · aviso 60 días antes</div><div class="acts"><button class="small" data-act="cad-edit" data-c="Reconocimiento médico (CIMA)">Cambiar fecha</button></div></div>`;
+  } else if(cima){
+    cimaCard=`<div class="rule warn"><span class="pill">Sin fecha</span><div class="name">Reconocimiento médico CIMA</div><div class="acts"><button class="small" data-act="cad-edit" data-c="Reconocimiento médico (CIMA)">Poner fecha</button></div></div>`;
+  }
+  const sims=S.flights.filter(isSim);
+  const simRows=types().map(t=>({t,l:lastOf(sims.filter(f=>f.tipo===t))})).filter(x=>x.l);
+  const row=(n,iso,c)=>`<div class="cadrow"><div><div class="n">${esc(n)}</div><div class="d">${iso?ago(iso,today):'sin fecha'}</div></div>${c?`<button class="small" data-act="cad-edit" data-c="${esc(c)}">Cambiar</button>`:''}</div>`;
+  const others=['Entrenamiento aeromédico (CIMA)','Supervivencia en el mar'].map(c=>{const x=get(c); return x?row(c,x.ultima,c):'';}).join('');
   return `
-  <section class="panel"><header><h2>Estado de tus requisitos</h2><span class="hint">Se calculan con tus vuelos y la fecha de hoy (${fmtDate(today)})</span></header>
-    ${S.rules.length?`<div class="rules">${S.rules.map(x=>ruleCard(x,today,true)).join('')}</div>`:`<div class="empty">No hay requisitos todavía. Define el primero abajo.</div>`}</section>
-  <section class="panel"><header><h2>${editingRule&&editingRule.id?'Editar requisito':'Nuevo requisito'}</h2><span class="hint">Pon los plazos y mínimos que te correspondan según tu unidad y normativa</span></header>
-    <form id="ruleform" class="grid" novalidate>
-      <div class="fld w6"><label for="r-name">Nombre</label><input id="r-name" value="${esc(r.name||'')}" placeholder="Por ejemplo: actividad en H135 P3H" autocomplete="off"></div>
-      <div class="fld w3"><label for="r-kind">Qué se comprueba</label><select id="r-kind">${opt('recency','Actividad: al menos un vuelo/sesión cada N días',kind==='recency')}${opt('hours','Horas mínimas en un periodo',kind==='hours')}</select></div>
-      <div class="fld w3"><label for="r-tipo">Aeronave</label><select id="r-tipo">${opt('','Cualquiera',!r.tipo)}${[...new Set([...TYPE_ORDER,...types()])].map(t=>opt(t,t,r.tipo===t)).join('')}</select></div>
-      <div class="fld w3"><label for="r-source">Cuenta</label><select id="r-source">${opt('real','Solo vuelo real',(r.source||'real')==='real')}${opt('sim','Solo simulador',r.source==='sim')}${opt('any','Vuelo real y simulador',r.source==='any')}</select></div>
-      <div class="fld w3"><label for="r-days" id="r-days-l">Días</label><input id="r-days" type="number" min="1" inputmode="numeric" value="${r.days||90}"></div>
-      <div class="fld w3 hrs ${kind==='hours'?'':'rulehide'}"><label for="r-hours">Horas mínimas</label><input id="r-hours" type="number" min="0" step="0.25" inputmode="decimal" value="${r.hours||''}"></div>
-      <div class="fld w3 hrs ${kind==='hours'?'':'rulehide'}"><label for="r-cal">Periodo</label><select id="r-cal">${opt('0','Últimos N días',!r.calYear)}${opt('1','Año natural en curso',!!r.calYear)}</select></div>
-      <div class="fld w3"><label for="r-warn">Avisar con (días)</label><input id="r-warn" type="number" min="0" inputmode="numeric" value="${r.warn==null?15:r.warn}"></div>
-      <div class="fld w6"><div class="err" id="r-err"></div><div class="row"><button class="primary" type="submit">${editingRule&&editingRule.id?'Guardar cambios':'Añadir requisito'}</button>${editingRule?'<button type="button" data-act="rule-cancel">Cancelar</button>':''}</div></div>
-    </form></section>`;
+  <section class="panel"><header><h2>Caducidad</h2><span class="hint">hoy ${fmtDate(today)}</span></header>
+    ${cimaCard?`<div class="rules">${cimaCard}</div>`:`<div class="empty">${syncConfigured()?'No encuentro el reconocimiento médico en la pestaña CADUCIDADES de tu hoja.':'Conecta tu Hoja de Google en Datos para ver tu reconocimiento médico.'}</div>`}</section>
+  <section class="panel"><header><h2>Última vez realizado</h2><span class="hint">solo informativo, sin alarmas</span></header>
+    <div class="cadlist">${others}${simRows.map(x=>row('Simulador '+x.t,x.l,'')).join('')}${!others&&!simRows.length?'<div class="hint">Sin datos.</div>':''}</div>
+    <p class="hint">El simulador se toma de tus vuelos con clave SIMULADOR.</p></section>`;
 }
 
 function viewVuelos(){
@@ -533,14 +577,15 @@ function viewVuelos(){
   <section class="panel"><header><h2>Vuelos</h2><span class="hint">${list.length} de ${S.flights.length} · ${hm(sum(list,f=>f.min))} h</span></header>
     <div class="filters"><input id="q" type="search" placeholder="Buscar en todos los campos" value="${esc(q)}" aria-label="Buscar"><select id="ft" aria-label="Filtrar por aeronave"><option value="">Todas las aeronaves</option>${types().map(t=>`<option${t===ft?' selected':''}>${esc(t)}</option>`).join('')}</select></div>
     <div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Aeronave</th><th>Mat.</th><th>Rol</th><th>Clave</th><th class="r">Horas</th><th>Reglas</th><th>Zona</th><th>Observaciones</th><th></th></tr></thead><tbody>
-    ${list.map(f=>`<tr><td class="num">${fmtDate(f.date)}</td><td>${esc(f.tipo)}</td><td class="num">${esc(f.matricula)}</td><td>${esc(f.rol)}</td><td><span class="tag">${esc(f.mision)}</span></td><td class="r num">${hm(f.min)}</td><td>${esc(f.vuelo)}</td><td>${esc(f.zona)}</td><td class="obs">${esc(f.obs)}${f.tripulacion?`<br>Trip.: ${esc(f.tripulacion)}`:''}</td><td style="white-space:nowrap"><button class="small" data-act="edit" data-id="${f.id}">Editar</button> <button class="small danger" data-act="del" data-id="${f.id}">Borrar</button></td></tr>`).join('')||'<tr><td colspan="10" class="hint">No hay vuelos que coincidan.</td></tr>'}
+    ${list.map(f=>`<tr><td class="num">${fmtDate(f.date)}</td><td>${esc(f.tipo)}</td><td class="num">${esc(f.matricula)}</td><td>${esc(f.rol)}</td><td><span class="tag">${esc(f.mision)}</span>${claveDesc(f.mision)?`<span class="cdesc">(${esc(claveDesc(f.mision))})</span>`:''}</td><td class="r num">${hm(f.min)}</td><td>${esc(f.vuelo)}</td><td>${esc(f.zona)}</td><td class="obs">${esc(f.obs)}${f.tripulacion?`<br>Trip.: ${esc(f.tripulacion)}`:''}${(nInt(f.ciclos)||rescatados(f))?`<div class="chips">${nInt(f.ciclos)?`<span class="chip">Grúa ${nInt(f.ciclos)}</span>`:''}${nInt(f.heridos)?`<span class="chip">${nInt(f.heridos)} herido${nInt(f.heridos)>1?'s':''}</span>`:''}${nInt(f.fallecidos)?`<span class="chip">${nInt(f.fallecidos)} fallecido${nInt(f.fallecidos)>1?'s':''}</span>`:''}</div>`:''}</td><td style="white-space:nowrap"><button class="small" data-act="edit" data-id="${f.id}">Editar</button> <button class="small danger" data-act="del" data-id="${f.id}">Borrar</button></td></tr>`).join('')||'<tr><td colspan="10" class="hint">No hay vuelos que coincidan.</td></tr>'}
     </tbody></table></div></section>`;
 }
 
 function viewAnadir(){
   const f=editingId?S.flights.find(x=>x.id===editingId):null;
   const last=[...S.flights].sort((a,b)=>b.date.localeCompare(a.date))[0]||{};
-  const v=f||{date:todayISO(),tipo:last.tipo||'',matricula:last.matricula||'',rol:last.rol||'SIC',mision:'',min:0,vuelo:'VFR',tripulacion:'',zona:'',obs:''};
+  const lastReal=[...S.flights].filter(x=>!isSim(x)).sort((a,b)=>b.date.localeCompare(a.date))[0]||last;
+  const v=f||{date:todayISO(),tipo:lastReal.tipo||'',matricula:lastReal.matricula||'',rol:lastReal.rol||'SIC',mision:'',min:0,vuelo:lastReal.vuelo||'VFR',tripulacion:'',zona:'',obs:'',ciclos:0,heridos:0,fallecidos:0};
   const uniq=k=>[...new Set(S.flights.map(x=>x[k]).filter(Boolean))].sort();
   const dlist=(id,arr)=>`<datalist id="${id}">${arr.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
   return `
@@ -550,15 +595,18 @@ function viewAnadir(){
       <div class="fld"><label for="f-tipo">Aeronave</label><input id="f-tipo" list="dl-tipo" value="${esc(v.tipo)}" autocomplete="off" placeholder="H135 P3H"></div>
       <div class="fld"><label for="f-mat">Matrícula</label><input id="f-mat" list="dl-mat" value="${esc(v.matricula)}" inputmode="numeric" autocomplete="off"></div>
       <div class="fld"><label for="f-rol">Rol</label><select id="f-rol">${[...new Set([...ROLES,v.rol].filter(Boolean))].map(r=>`<option${r===v.rol?' selected':''}>${esc(r)}</option>`).join('')}</select></div>
-      <div class="fld"><label for="f-mision">Clave de servicio</label><input id="f-mision" list="dl-mis" value="${esc(v.mision)}" autocomplete="off" placeholder="VO, RE, SIMULADOR..."></div>
+      <div class="fld"><label for="f-mision">Clave de servicio</label><input id="f-mision" list="dl-mis" value="${esc(v.mision)}" autocomplete="off" placeholder="VO, RE, SIMULADOR..."><span class="misdesc" id="f-misdesc">${claveDesc(v.mision)?'('+esc(claveDesc(v.mision))+')':''}</span></div>
       <div class="fld"><label for="f-horas">Horas</label><input id="f-horas" value="${v.min?hm(v.min):''}" inputmode="text" autocomplete="off" placeholder="1:25"></div>
       <div class="fld"><label for="f-vuelo">Reglas de vuelo</label><select id="f-vuelo"><option${v.vuelo==='VFR'?' selected':''}>VFR</option><option${v.vuelo==='IFR'?' selected':''}>IFR</option></select></div>
-      <div class="fld w3"><label for="f-trip">Tripulación</label><input id="f-trip" value="${esc(v.tripulacion)}" autocomplete="off"></div>
+      <div class="fld w3"><label for="f-trip">Tripulación</label><input id="f-trip" list="dl-trip" value="${esc(v.tripulacion)}" autocomplete="off"></div>
       <div class="fld w3"><label for="f-zona">Zona - aeródromo</label><input id="f-zona" list="dl-zona" value="${esc(v.zona)}" autocomplete="off"></div>
+      <div class="fld"><label for="f-ciclos">Ciclos de grúa</label><input id="f-ciclos" type="number" min="0" inputmode="numeric" value="${nInt(v.ciclos)||''}" placeholder="0"></div>
+      <div class="fld"><label for="f-her">Heridos rescatados</label><input id="f-her" type="number" min="0" inputmode="numeric" value="${nInt(v.heridos)||''}" placeholder="0"></div>
+      <div class="fld"><label for="f-fal">Fallecidos rescatados</label><input id="f-fal" type="number" min="0" inputmode="numeric" value="${nInt(v.fallecidos)||''}" placeholder="0"></div>
       <div class="fld w6"><label for="f-obs">Observaciones</label><textarea id="f-obs">${esc(v.obs)}</textarea></div>
       <div class="fld w6"><div class="err" id="f-err"></div><div class="row"><button class="primary" type="submit" data-then="list">${f?'Guardar cambios':'Guardar vuelo'}</button>${f?'<button type="button" data-act="cancel-edit">Cancelar</button>':'<button type="submit" data-then="again">Guardar y añadir otro</button>'}</div></div>
     </form>
-    ${dlist('dl-tipo',[...new Set([...TYPE_ORDER,...uniq('tipo')])])}${dlist('dl-mat',uniq('matricula'))}${dlist('dl-mis',[...new Set(['SIMULADOR',...uniq('mision')])])}${dlist('dl-zona',uniq('zona'))}
+    ${dlist('dl-tipo',[...new Set([...TYPE_ORDER,...uniq('tipo')])])}${dlist('dl-mat',uniq('matricula'))}<datalist id="dl-mis">${[...new Set(['SIMULADOR',...(S.claves||[]).map(c=>String(c.clave).toUpperCase()),...uniq('mision')])].map(k=>`<option value="${esc(k)}" label="${esc(claveDesc(k))}">`).join('')}</datalist>${dlist('dl-zona',uniq('zona'))}${dlist('dl-trip',uniq('tripulacion'))}
   </section>`;
 }
 
@@ -603,12 +651,14 @@ function render(){
   const t=tab();
   document.querySelectorAll('#nav a').forEach(a=>{ if(a.dataset.tab===t) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
   $('#app').innerHTML=VIEWS[t]();
+  updateSyncPill();
   if(t!=='anadir'&&editingId&&t!=='vigencias') editingId=null;
 }
 window.addEventListener('hashchange',()=>{ if(tab()!=='anadir') editingId=null; if(tab()!=='vigencias') editingRule=null; render(); window.scrollTo(0,0); });
 
 /* ---------- events ---------- */
 document.addEventListener('input',e=>{
+  if(e.target.id==='f-mision'){ const d=claveDesc(e.target.value); const el=$('#f-misdesc'); if(el) el.textContent=d?'('+d+')':''; return; }
   if(e.target.id==='q'||e.target.id==='ft'){
     dl=Object.assign(dl||{},{q:$('#q').value,ft:$('#ft').value});
     const pos=e.target.selectionStart, id=e.target.id; render(); const el=$('#'+id); el.focus(); try{el.setSelectionRange(pos,pos);}catch(_){}
@@ -666,6 +716,19 @@ document.addEventListener('click',async e=>{
     try{ await drainPending(); await syncPullAll(); render(); toast('Sincronizado'); }
     catch(ex){ if(errEl) errEl.textContent='No se pudo sincronizar: '+ex.message; }
   }
+  else if(act==='cad-edit'){
+    const c=b.dataset.c; const x=(S.cad||[]).find(y=>y.concepto===c)||{};
+    pending=c;
+    modal(`<h3>${esc(c)}</h3><label for="cad-d">Fecha de la última vez</label><input id="cad-d" type="date" value="${esc(x.ultima||todayISO())}"><div class="err" id="cad-err"></div><div class="row"><button class="primary" data-act="cad-ok">Guardar</button><button data-act="modal-x">Cancelar</button></div>`);
+  }
+  else if(act==='cad-ok'){
+    const c=pending, d=($('#cad-d')||{}).value;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d||'')){ $('#cad-err').textContent='Pon una fecha.'; return; }
+    if(!syncConfigured()){ $('#cad-err').textContent='Conecta tu Hoja de Google para guardar esta fecha.'; return; }
+    $('#cad-err').textContent='Guardando…';
+    try{ const r=await apiPost('setCaducidad',{concepto:c,fecha:d}); S.cad=r.caducidades||S.cad; save(); closeModal(); render(); toast('Fecha guardada en tu hoja'); }
+    catch(ex){ const e2=$('#cad-err'); if(e2) e2.textContent='No se pudo guardar: '+ex.message; }
+  }
   else if(act==='sync-off'){ disconnectSync(); render(); toast('Desconectado de Google Sheets'); }
   else if(act==='imp-replace'||act==='imp-add'){
     const inc=pending.flights;
@@ -691,8 +754,8 @@ async function onFlightSubmit(){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err('Indica la fecha.');
   if(!g('f-tipo')) return err('Indica la aeronave.');
   if(!g('f-mision')) return err('Indica la clave de servicio (o SIMULADOR).');
-  if(!(min>0)) return err('Las horas deben tener formato H:MM, por ejemplo 1:25.');
-  const rec={date,tipo:g('f-tipo'),matricula:g('f-mat'),rol:$('#f-rol').value,mision:g('f-mision').toUpperCase(),min,vuelo:$('#f-vuelo').value,tripulacion:g('f-trip'),zona:g('f-zona'),obs:g('f-obs')};
+  if(!(min>=0)) return err('Las horas deben tener formato H:MM, por ejemplo 1:25.');
+  const rec={date,tipo:g('f-tipo'),matricula:g('f-mat'),rol:$('#f-rol').value,mision:g('f-mision').toUpperCase(),min,vuelo:$('#f-vuelo').value,tripulacion:g('f-trip'),zona:g('f-zona'),obs:g('f-obs'),ciclos:nInt(g('f-ciclos')),heridos:nInt(g('f-her')),fallecidos:nInt(g('f-fal'))};
   let f, wasEdit=false;
   if(editingId){ const i=S.flights.findIndex(x=>x.id===editingId); S.flights[i]=Object.assign({},S.flights[i],rec); f=S.flights[i]; wasEdit=true; editingId=null; }
   else { leaveDemo(); f=Object.assign({id:uid()},rec); S.flights.push(f); }
@@ -744,8 +807,8 @@ async function onFile(file){
 }
 function toCSV(){
   const q=v=>{ v=String(v==null?'':v); return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
-  const head=['FECHA','TIPO','MATRÍCULA','ROLL','MISIÓN','HORAS','VUELO','TRIPULACIÓN','ZONA-AERÓDROMO','OBSERVACIONES'];
-  const body=[...S.flights].sort((a,b)=>a.date.localeCompare(b.date)).map(f=>[fmtDate(f.date),f.tipo,f.matricula,f.rol,f.mision,hm(f.min),f.vuelo,f.tripulacion,f.zona,f.obs].map(q).join(';'));
+  const head=['FECHA','TIPO','MATRÍCULA','ROL','CLAVE','HORAS','VUELO','TRIPULACIÓN','ZONA-AERÓDROMO','OBSERVACIONES','CICLOS GRÚA','HERIDOS','FALLECIDOS'];
+  const body=[...S.flights].sort((a,b)=>a.date.localeCompare(b.date)).map(f=>[fmtDate(f.date),f.tipo,f.matricula,f.rol,f.mision,hm(f.min),f.vuelo,f.tripulacion,f.zona,f.obs,nInt(f.ciclos)||'',nInt(f.heridos)||'',nInt(f.fallecidos)||''].map(q).join(';'));
   return '﻿'+[head.join(';'),...body].join('\r\n');
 }
 async function saveFile(name,data){
