@@ -392,6 +392,7 @@ function localToRemote(f){
 async function syncPullAll(){
   const res=await apiGet('todo');
   S.flights=(res.flights||[]).map(remoteToLocal);
+  S.rules=(S.rules||[]).filter(r=>!r.demo);
   S.demo=false;
   save();
   return res;
