@@ -27,6 +27,7 @@
   --ok:#4cc38a; --ok-soft:#14301f; --warn:#f0b04a; --warn-soft:#38290f; --late:#ff7a70; --late-soft:#3c1b19;
   color-scheme:dark;}}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
 h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;letter-spacing:.04em;text-transform:uppercase}
@@ -187,10 +188,18 @@ function minimos(sitio){
 }
 
 /* ---------- conexión ---------- */
+function conectarCon(txt){
+  const m=String(txt||'').match(/conectar=([A-Za-z0-9+/=%_-]+)/);if(!m)return false;
+  try{let b=decodeURIComponent(m[1]).replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';
+    const j=JSON.parse(atob(b));if(j.u&&j.t){S.url=j.u;S.token=j.t;S.data=null;S.fotos={};save();return true;}}catch(e){}
+  return false;
+}
 function tryLink(){
-  const m=location.hash.match(/conectar=([^&]+)/); if(!m)return false;
-  try{const j=JSON.parse(atob(decodeURIComponent(m[1])));if(j.u&&j.t){S.url=j.u;S.token=j.t;save();}}catch(e){}
-  history.replaceState(null,'',location.pathname+'#inicio');return true;
+  if(!/conectar=/.test(location.hash))return false;
+  const ok=conectarCon(location.hash);
+  history.replaceState(null,'',location.pathname+'#inicio');
+  if(!ok)toast('El enlace está incompleto. Pégalo entero abajo.');
+  return ok;
 }
 async function apiGet(action){
   const u=new URL(S.url);u.searchParams.set('app','mat');u.searchParams.set('action',action);u.searchParams.set('token',S.token);u.searchParams.set('_',Date.now());
@@ -257,7 +266,11 @@ function vista(){return(location.hash.replace('#','').split('/')[0])||'inicio';}
 function render(){
   pill();
   const app=$('#app');
-  if(!S.url){$('#tabs').hidden=true;app.innerHTML=`<div class="setup panel"><h2>Material GRUHEL</h2><p>Abre el <b>enlace de conexión</b> que te han pasado para empezar. Solo hace falta la primera vez.</p></div>`;return;}
+  if(!S.url){$('#tabs').hidden=true;app.innerHTML=`<div class="setup panel"><h2>Material GRUHEL</h2><p>Abre el <b>enlace de conexión</b> que te han pasado, o <b>pégalo aquí</b> entero. Solo hace falta la primera vez.</p>
+  <textarea id="link" placeholder="https://dbdkoi.github.io/…#conectar=…" style="min-height:90px"></textarea>
+  <button class="primary" style="width:100%;margin-top:10px" id="conectar">Conectar</button><p class="err" id="link-e"></p></div>`;
+  $('#conectar').onclick=()=>{if(conectarCon($('#link').value)){render();pull(true);}else $('#link-e').textContent='No reconozco el enlace: cópialo completo, incluida la parte "#conectar=…".';};
+  return;}
   $('#tabs').hidden=false;
   if(!S.data){app.innerHTML=`<div class="empty">Cargando el material…${S.err?'<br><span class="err">'+esc(S.err)+'</span>':''}</div>`;return;}
   const v=vista();
