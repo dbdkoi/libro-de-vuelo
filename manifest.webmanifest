@@ -1,14 +1,14 @@
 {
   "name": "Logbook",
   "short_name": "Logbook",
-  "description": "Registro personal de horas de vuelo",
+  "description": "Libro de vuelo personal",
   "lang": "es",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#2f3b24",
-  "theme_color": "#2f3b24",
+  "background_color": "#232e18",
+  "theme_color": "#232e18",
   "icons": [
     {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
     {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}

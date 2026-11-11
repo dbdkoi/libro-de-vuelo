@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2f3b24">
+<meta name="theme-color" content="#232e18">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -14,158 +14,251 @@
 <title>Logbook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Layout: sticky top bar with tabs, one centered column of panels, ruled-ledger tables, a single odometer readout as the bold element. */
+/* Logbook v2. Una columna de tarjetas; el contador de horas sobre verde oliva es el único elemento fuerte.
+   Barra de pestañas abajo en móvil, arriba en pantallas anchas. */
 :root{
-  --bg:#eef0e8; --surface:#ffffff; --ink:#1b2114; --muted:#5d6650; --line:#d4d9c8;
-  --accent:#3d4f2b; --accent-ink:#ffffff; --accent-soft:#e1e8d3;
-  --ok:#1d7a4d; --ok-soft:#dcf1e6; --warn:#a85f00; --warn-soft:#fbebd0; --late:#b3261e; --late-soft:#f8dedb;
+  --bg:#e9ede0; --surface:#fbfcf8; --ink:#1a2013; --muted:#5f6954; --line:#d2d8c4;
+  --accent:#3d4f2b; --accent-ink:#ffffff; --soft:#dde5cf;
+  --hero:#232e18; --hero-2:#2e3c20; --hero-ink:#eef2e4; --hero-mut:#a9b598; --hero-col:#5b7340; --hero-on:#d9c27a;
+  --a1:#c2a865; --a2:#7d9a52; --a3:#3d4f2b; --a4:#8a8f7c;
+  --ok:#1d7a4d; --ok-soft:#dcf1e6; --warn:#9a5700; --warn-soft:#fbebd0; --late:#b3261e; --late-soft:#f8dedb;
   --display:"Barlow Condensed","Arial Narrow",sans-serif;
-  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --nav-h:62px;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#12160e; --surface:#1a2014; --ink:#e7eadf; --muted:#9aa38c; --line:#2c3423;
-    --accent:#a9c47f; --accent-ink:#1a2210; --accent-soft:#283320;
+    --bg:#0f130b; --surface:#181f12; --ink:#e6eadc; --muted:#98a28a; --line:#2b3422;
+    --accent:#a9c47f; --accent-ink:#17200d; --soft:#243019;
+    --hero:#1e2a14; --hero-2:#27351a; --hero-col:#4c6335; --hero-on:#d9c27a;
+    --a1:#cdb574; --a2:#7f9e54; --a3:#b9d48f; --a4:#7d8372;
     --ok:#4cc38a; --ok-soft:#14301f; --warn:#f0b04a; --warn-soft:#38290f; --late:#ff7a70; --late-soft:#3c1b19;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#12160e; --surface:#1a2014; --ink:#e7eadf; --muted:#9aa38c; --line:#2c3423;
-  --accent:#a9c47f; --accent-ink:#1a2210; --accent-soft:#283320;
+  --bg:#0f130b; --surface:#181f12; --ink:#e6eadc; --muted:#98a28a; --line:#2b3422;
+  --accent:#a9c47f; --accent-ink:#17200d; --soft:#243019;
+  --hero:#1e2a14; --hero-2:#27351a; --hero-col:#4c6335; --hero-on:#d9c27a;
+  --a1:#cdb574; --a2:#7f9e54; --a3:#b9d48f; --a4:#7d8372;
   --ok:#4cc38a; --ok-soft:#14301f; --warn:#f0b04a; --warn-soft:#38290f; --late:#ff7a70; --late-soft:#3c1b19;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);-webkit-text-size-adjust:100%}
-h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:.02em;text-wrap:balance;margin:0}
-h2{font-size:22px;text-transform:uppercase;letter-spacing:.06em}
-h3{font-size:17px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+h1,h2,h3{margin:0;font-family:var(--display);font-weight:600;letter-spacing:.01em}
+h2{font-size:23px;line-height:1.1}
+h3{font-size:19px}
 a{color:var(--accent)}
-.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.n{font-family:var(--display);font-variant-numeric:tabular-nums;letter-spacing:.01em}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 
-header.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:2px solid var(--ink)}
-header.top::after{content:"";display:block;height:3px;background:var(--bg);border-bottom:1px solid var(--ink)}
-.bar{max-width:1040px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px 24px}
-.brand{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.08em;text-transform:uppercase;padding-bottom:8px;white-space:nowrap}
-.brand small{display:block;font:500 11px var(--body);letter-spacing:.12em;color:var(--muted);margin-top:-4px}
-nav{display:flex;gap:2px;overflow-x:auto;max-width:100%}
-nav a{padding:9px 14px;text-decoration:none;color:var(--muted);font-weight:500;border-bottom:3px solid transparent;white-space:nowrap}
-nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
-nav a:hover{color:var(--ink)}
-nav a.cta{color:var(--accent);font-weight:600}
+/* cabecera */
+header.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:calc(8px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left));min-height:52px}
+.brand{font:700 25px/1 var(--display);letter-spacing:.09em;margin-right:auto}
+.sync{display:inline-flex;align-items:center;gap:6px;min-height:34px;min-width:34px;justify-content:center;padding:0 8px;border-radius:99px;border:0;background:transparent;color:var(--muted);font:600 14px var(--body);cursor:pointer}
+.sync.idle{visibility:hidden}
+.sync svg.i{width:19px;height:19px}
+.sync.busy svg.i{animation:giro 1s linear infinite}
+.sync.ok{color:var(--ok)} .sync.warn{color:var(--warn);background:var(--warn-soft)} .sync.err{color:var(--late);background:var(--late-soft)}
+@keyframes giro{to{transform:rotate(360deg)}}
 
-main{max-width:1040px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-right)) calc(64px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:20px}
-section.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px}
-.panel>header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 12px;margin-bottom:12px}
-.hint{color:var(--muted);font-size:13px}
-.banner{border:1px solid var(--warn);background:var(--warn-soft);color:var(--ink);border-radius:6px;padding:10px 14px;font-size:14px}
-.banner b{color:var(--warn)}
+/* pestañas */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:0 max(6px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(6px,env(safe-area-inset-left))}
+nav.tabs a{height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--muted);font:500 12.5px var(--body);position:relative}
+nav.tabs a[aria-current="page"]{color:var(--accent);font-weight:600}
+nav.tabs a[aria-current="page"]::before{content:"";position:absolute;top:0;left:26%;right:26%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+nav.tabs a.add span.plus{width:48px;height:48px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;margin-top:-18px;border:4px solid var(--surface);box-sizing:content-box}
+nav.tabs a.add span.plus svg.i{width:26px;height:26px;stroke-width:2.2}
+nav.tabs a.add::before{display:none}
+nav.tabs a .dot{position:absolute;top:9px;left:calc(50% + 8px);width:9px;height:9px;border-radius:50%;background:var(--late);border:2px solid var(--surface);box-sizing:content-box}
+nav.tabs a .dot.warn{background:var(--warn)}
 
-.hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr);gap:16px}
-.odo{background:var(--ink);color:var(--bg);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;justify-content:space-between;min-height:150px}
-.odo .lbl{font:600 12px var(--body);letter-spacing:.14em;text-transform:uppercase;opacity:.75}
-.odo .val{font-family:var(--display);font-weight:700;font-size:clamp(52px,9vw,80px);line-height:1;letter-spacing:.02em;font-variant-numeric:tabular-nums}
-.odo .val small{font-size:.35em;letter-spacing:.1em;margin-left:6px;opacity:.7}
-.odo .sub{font-size:13px;opacity:.8}
-.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.tile{border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
-.tile .lbl{font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.tile .val{font:500 24px var(--mono);font-variant-numeric:tabular-nums}
-.tile .sub{font-size:13px;color:var(--muted)}
-@media (max-width:720px){.hero{grid-template-columns:1fr}}
+main{max-width:760px;margin:0 auto;padding:14px max(14px,env(safe-area-inset-right)) calc(var(--nav-h) + 34px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:14px}
+@media (min-width:900px){
+  nav.tabs{position:static;border:0;background:none;display:flex;gap:4px;padding:0}
+  nav.tabs a{height:40px;flex-direction:row;gap:7px;padding:0 12px;font-size:15px;border-radius:8px}
+  nav.tabs a[aria-current="page"]{background:var(--soft)}
+  nav.tabs a[aria-current="page"]::before{display:none}
+  nav.tabs a.add span.plus{width:28px;height:28px;margin:0;border:0}
+  nav.tabs a.add span.plus svg.i{width:18px;height:18px}
+  nav.tabs a .dot{top:6px;left:24px}
+  .brand{margin-right:10px}
+  .sync{margin-left:auto}
+  main{padding-bottom:60px}
+}
 
-.tablewrap{overflow-x:auto}
-table{border-collapse:collapse;width:100%;min-width:560px}
-th{font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--ink);white-space:nowrap}
-td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-tr:last-child td{border-bottom:0}
-td.r,th.r{text-align:right}
-tr.total td{font-weight:600;border-top:2px solid var(--ink);border-bottom:0}
-td .tag{display:inline-block;font:500 11px var(--mono);padding:1px 6px;border:1px solid var(--line);border-radius:3px;color:var(--muted)}
-td.obs{max-width:260px;color:var(--muted);font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.card>header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px}
+.hint{color:var(--muted);font-size:14px}
+.banner{border:1px solid var(--warn);background:var(--warn-soft);border-radius:12px;padding:10px 14px;font-size:15px}
+.banner.late{border-color:var(--late);background:var(--late-soft)}
 
-.rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
-.rule{border:1px solid var(--line);border-left-width:6px;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
-.rule.ok{border-left-color:var(--ok)} .rule.warn{border-left-color:var(--warn)} .rule.late{border-left-color:var(--late)}
-.rule .name{font-weight:600}
-.pill{align-self:flex-start;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:99px}
-.ok .pill{background:var(--ok-soft);color:var(--ok)} .warn .pill{background:var(--warn-soft);color:var(--warn)} .late .pill{background:var(--late-soft);color:var(--late)}
-.rule .head{font:500 15px var(--mono)}
-.rule .det{font-size:13px;color:var(--muted)}
-.rule .acts{display:flex;gap:8px;margin-top:4px}
-.empty{border:1px dashed var(--line);border-radius:6px;padding:16px;color:var(--muted)}
+/* contador de horas */
+.hero{background:linear-gradient(170deg,var(--hero-2),var(--hero) 55%);color:var(--hero-ink);border-radius:20px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:14px}
+.hero .lbl{font:500 15px var(--body);color:var(--hero-mut)}
+.hero .total{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hero .val{font:700 clamp(68px,21vw,104px)/.82 var(--display);font-variant-numeric:tabular-nums;letter-spacing:.005em}
+.hero .val small{font-size:.5em;font-weight:600;color:var(--hero-mut)}
+.hero .side{font-size:15px;color:var(--hero-mut);line-height:1.35;display:flex;flex-wrap:wrap;gap:0 16px;flex:1 1 100%}
+@media (min-width:560px){.hero .side{flex:0 1 auto;flex-direction:column;align-items:flex-end}}
+.hero .side b{color:var(--hero-ink);font-weight:600}
+.cols{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;align-items:end;height:112px;padding-top:16px}
+.col{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;background:none;border:0;padding:0;cursor:pointer;color:var(--hero-mut);font:500 12px var(--body)}
+.col i{display:block;border-radius:4px 4px 1px 1px;background:var(--hero-col);min-height:3px}
+.col.on i{background:var(--hero-on)}
+.col.on{color:var(--hero-ink)}
+.col b{display:block;text-align:center;margin:0 -6px 3px;font:600 13px/1 var(--display);color:var(--hero-ink)}
+.col span{display:block;text-align:center;padding-top:5px;line-height:1}
+.pick{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.14);padding-top:11px;font-size:15px;min-height:42px}
+.pick b{font-weight:600}
+.pick a{color:var(--hero-on);font-weight:600;text-decoration:none;white-space:nowrap}
+.win{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.win div{background:rgba(255,255,255,.07);border-radius:10px;padding:8px 10px}
+.win span{display:block;font-size:13px;color:var(--hero-mut)}
+.win b{font:600 23px/1.1 var(--display);font-variant-numeric:tabular-nums}
 
-.bars{display:flex;flex-direction:column;gap:8px}
-.brow{display:grid;grid-template-columns:110px minmax(0,1fr) 120px;gap:10px;align-items:center;font-size:14px}
-.brow .track{height:12px;background:var(--accent-soft);border-radius:2px;overflow:hidden}
-.brow .fill{height:100%;background:var(--accent);min-width:2px}
-.brow .v{text-align:right}
-.brow .k{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
-@media (max-width:720px){.cols{grid-template-columns:1fr}.brow{grid-template-columns:80px minmax(0,1fr) 100px}}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:13px 14px;display:flex;flex-direction:column;gap:1px;text-decoration:none;color:inherit;min-width:0}
+.stat .k{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.stat .v{font:600 31px/1.05 var(--display);font-variant-numeric:tabular-nums}
+.stat .s{font-size:14px;color:var(--muted)}
+.stat.ok .v{color:var(--ok)} .stat.warn .v{color:var(--warn)} .stat.late .v{color:var(--late)}
+.stat.warn{border-color:var(--warn)} .stat.late{border-color:var(--late)}
+.stat svg.i{width:17px;height:17px}
 
-form.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
-.fld{display:flex;flex-direction:column;gap:4px;grid-column:span 2}
-.fld.w3{grid-column:span 3}.fld.w6{grid-column:span 6}.fld.w1{grid-column:span 1}
-@media (max-width:720px){form.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fld,.fld.w3,.fld.w1{grid-column:span 1}.fld.w6{grid-column:span 2}}
-label{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-input,select,textarea{font:16px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:9px 10px;width:100%;min-height:42px}
-input[type=checkbox]{width:auto;min-height:0}
-textarea{resize:vertical;min-height:72px}
-.err{color:var(--late);font-size:13px;min-height:1em}
+/* reparto por aeronave */
+.split{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;margin-bottom:6px}
+.split i{display:block;min-width:4px}
+.ac{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:2px 10px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line)}
+.ac:last-child{border-bottom:0;padding-bottom:0}
+.ac .sw{width:12px;height:12px;border-radius:3px;align-self:center}
+.ac .nm{font-weight:600;font-size:17px}
+.ac .hr{font:600 25px/1 var(--display);font-variant-numeric:tabular-nums}
+.ac .meta{grid-column:2 / 4;font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 14px}
+.ac .meta b{font-weight:600;color:var(--ink)}
+
+.rows{display:flex;flex-direction:column;gap:11px}
+.rw{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:baseline}
+.rw .t{min-width:0;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rw .x{font:600 18px/1 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rw .x small{font:400 13px var(--body);color:var(--muted);margin-left:6px}
+.rw .track{grid-column:1 / 3;height:8px;background:var(--soft);border-radius:4px;overflow:hidden}
+.rw .fill{display:block;height:100%;background:var(--accent);border-radius:4px;min-width:3px}
+.tag{display:inline-block;font:600 13px/1 var(--display);letter-spacing:.05em;padding:4px 7px 3px;border-radius:5px;background:var(--soft);color:var(--ink);margin-right:7px;vertical-align:1px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.legend b{color:var(--ink);font-weight:600}
+
+/* lista de vuelos */
+.search{display:flex;gap:8px}
+.search input{flex:1}
+.chipsrow{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none}
+.chipsrow::-webkit-scrollbar{display:none}
+.chipb{flex:0 0 auto;font:500 15px var(--body);padding:7px 13px;min-height:38px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+.chipb.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.mon{display:flex;justify-content:space-between;align-items:baseline;padding:10px 4px 0;gap:10px}
+.mon h3{text-transform:capitalize}
+.mon span{font-size:14px;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:8px}
+.fl{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 12px;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:2px 12px;cursor:pointer}
+.fl.sim{border-style:dashed}
+.fl .d{grid-row:1 / 3;text-align:center;align-self:start;border-right:1px solid var(--line);padding-right:10px}
+.fl .d b{display:block;font:700 27px/1 var(--display)}
+.fl .d span{display:block;font-size:13px;color:var(--muted)}
+.fl .t{font-weight:600;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl .h{font:700 26px/1 var(--display);font-variant-numeric:tabular-nums;text-align:right}
+.fl .m{grid-column:2 / 4;font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:1px 12px}
+.fl .m b{color:var(--ink);font-weight:500}
+.fl .more{grid-column:1 / 4;border-top:1px solid var(--line);margin-top:9px;padding-top:10px;font-size:15px;display:flex;flex-direction:column;gap:6px;cursor:auto}
+.fl .more dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px}
+.fl .more dt{color:var(--muted)} .fl .more dd{margin:0}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{font:500 13px var(--body);padding:2px 9px;border-radius:99px;background:var(--soft)}
+.badge.r{background:var(--warn-soft);color:var(--warn)}
+.empty{border:1px dashed var(--line);border-radius:14px;padding:18px;color:var(--muted);text-align:center}
+
+/* formularios */
+form.grid,.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px 12px}
+.fld{display:flex;flex-direction:column;gap:5px;grid-column:span 6;min-width:0}
+.fld.h{grid-column:span 3} .fld.t{grid-column:span 2}
+label,.lab{font:600 14px var(--body);color:var(--muted)}
+input,select,textarea{font:17px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-height:46px}
+textarea{resize:vertical;min-height:76px}
+.quick{display:flex;flex-wrap:wrap;gap:6px}
+.quick .chipb{font-size:14px;padding:4px 11px;min-height:32px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.seg button{border:0;border-radius:0;background:none;min-height:44px;padding:0 6px;font:500 16px var(--body);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.step{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.step input{border:0;border-radius:0;text-align:center;padding:0;background:none;font:600 22px var(--display);-moz-appearance:textfield}
+.step input::-webkit-outer-spin-button,.step input::-webkit-inner-spin-button{-webkit-appearance:none}
+.step button{border:0;border-radius:0;background:var(--soft);font:600 22px var(--display);min-height:46px;padding:0;color:var(--ink);cursor:pointer}
+.misdesc{font-size:14px;color:var(--muted);min-height:1.3em}
+.err{color:var(--late);font-size:15px;min-height:1.2em}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-button,.btn{font:600 14px var(--body);cursor:pointer;border-radius:5px;padding:9px 16px;min-height:40px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+button,.btn{font:600 16px var(--body);cursor:pointer;border-radius:10px;padding:10px 18px;min-height:46px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 button.danger{color:var(--late);border-color:var(--late)}
-button.small{padding:4px 10px;min-height:30px;font-size:13px}
-button:hover{filter:brightness(.96)}
-.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
-.filters input{max-width:280px}.filters select{max-width:200px}
-.seg{display:inline-flex;gap:0}
+button.small{padding:6px 13px;min-height:36px;font-size:15px}
+button.wide{flex:1}
+button:disabled{opacity:.5}
 
-#modal{position:fixed;inset:0;background:rgba(5,10,16,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+/* piloto */
+.valid .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.valid .big{font:700 52px/.9 var(--display);font-variant-numeric:tabular-nums}
+.valid .big small{font:500 17px var(--body);color:var(--muted);margin-left:6px}
+.valid.ok .big{color:var(--ok)} .valid.warn .big{color:var(--warn)} .valid.late .big{color:var(--late)}
+.life{height:10px;border-radius:5px;background:var(--soft);overflow:hidden;margin:12px 0 8px}
+.life i{display:block;height:100%;border-radius:5px;background:var(--ok)}
+.valid.warn .life i{background:var(--warn)} .valid.late .life i{background:var(--late)}
+.ends{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+.pill{font:600 14px var(--body);padding:3px 11px;border-radius:99px;white-space:nowrap}
+.ok .pill{background:var(--ok-soft);color:var(--ok)} .warn .pill{background:var(--warn-soft);color:var(--warn)} .late .pill{background:var(--late-soft);color:var(--late)}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:0;padding-bottom:0} .kv:first-child{padding-top:0}
+.kv .a{font-weight:600} .kv .b{font-size:14px;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:0 0 0 6px}
+.tl li{position:relative;padding:0 0 18px 24px;border-left:2px solid var(--line)}
+.tl li:last-child{border-left-color:transparent;padding-bottom:0}
+.tl li::before{content:"";position:absolute;left:-8px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--accent)}
+.tl li.tit::before{background:var(--accent);width:14px;height:14px;left:-10px;top:0}
+.tl .when{font:600 17px/1.1 var(--display);color:var(--muted);font-variant-numeric:tabular-nums}
+.tl .when small{font:400 14px var(--body);margin-left:8px}
+.tl .what{font-weight:600;font-size:17px;line-height:1.25;margin:3px 0 2px}
+.tl .kind{font-size:14px;color:var(--accent);font-weight:600}
+.tl .det{font-size:14.5px;color:var(--muted);white-space:pre-line;margin-top:4px}
+.tl button{margin-top:4px;border:0;background:none;padding:0;min-height:34px;color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+
+#modal{position:fixed;inset:0;background:rgba(8,12,5,.6);display:none;align-items:flex-end;justify-content:center;z-index:20}
 #modal.on{display:flex}
-#modal .box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px;max-width:460px;width:100%;display:flex;flex-direction:column;gap:14px}
-#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:6px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+#modal .box{background:var(--surface);border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-width:560px;width:100%;max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:14px}
+@media (min-width:640px){#modal{align-items:center;padding:16px}#modal .box{border-radius:18px;padding:22px}}
+#toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;max-width:min(92vw,480px);text-align:center}
 #toast.on{opacity:1}
-@media (prefers-reduced-motion:reduce){#toast{transition:none}}
-.rulehide{display:none}
-.syncpill{align-self:center;margin-left:auto;font:600 11px var(--body);letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-.syncpill.ok{color:var(--ok);border-color:var(--ok)} .syncpill.warn{color:var(--warn);border-color:var(--warn)} .syncpill.off{color:var(--muted)}
-.cdesc{display:block;font-size:11px;color:var(--muted);line-height:1.25;margin-top:2px;max-width:170px}
-.rescue{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.rescue .odo{min-height:120px}
-.rescue .odo .val{font-size:clamp(46px,8vw,68px)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.chip{font:500 11px var(--mono);padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
-.misdesc{font-size:12px;color:var(--muted);min-height:1.2em}
-.cadlist{display:flex;flex-direction:column;gap:0}
-.cadrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
-.cadrow:last-child{border-bottom:0}
-.cadrow .n{font-weight:600}
-.cadrow .d{font:500 14px var(--mono);color:var(--muted)}
-@media (max-width:720px){.rescue{grid-template-columns:1fr 1fr;gap:10px}.rescue .odo{padding:12px 14px;min-height:110px}}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}.sync.busy svg.i{animation:none}}
+@media (max-width:359px){.hero .val{font-size:60px}.fld.t{grid-column:span 3}}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="bar">
-    <div class="brand">Logbook<small>REGISTRO PERSONAL DE HORAS</small></div>
-    <span id="syncpill" class="syncpill" aria-live="polite"></span>
-    <nav id="nav" aria-label="Secciones">
-      <a href="#resumen" data-tab="resumen">Resumen</a>
-      <a href="#vigencias" data-tab="vigencias">Vigencias</a>
-      <a href="#vuelos" data-tab="vuelos">Vuelos</a>
-      <a href="#anadir" data-tab="anadir" class="cta">+ Añadir vuelo</a>
-      <a href="#datos" data-tab="datos">Datos</a>
+    <div class="brand">LOGBOOK</div>
+    <nav class="tabs" id="nav" aria-label="Secciones">
+      <a href="#resumen" data-tab="resumen"><svg class="i" viewBox="0 0 24 24"><path d="M4 19V10M10 19V5M16 19v-7M21 19H3"/></svg><span>Resumen</span></a>
+      <a href="#vuelos" data-tab="vuelos"><svg class="i" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Vuelos</span></a>
+      <a href="#anadir" data-tab="anadir" class="add" aria-label="Añadir vuelo"><span class="plus"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></a>
+      <a href="#piloto" data-tab="piloto"><svg class="i" viewBox="0 0 24 24"><path d="M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0"/></svg><span>Piloto</span><i class="dot" id="navdot" hidden></i></a>
+      <a href="#datos" data-tab="datos"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 7a2 2 0 1 0 4 0 2 2 0 0 0-4 0ZM6 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/></svg><span>Datos</span></a>
     </nav>
+    <button id="sync" class="sync idle" data-act="sync-info" type="button"></button>
   </div>
 </header>
 <main id="app"></main>
@@ -205,7 +298,7 @@ function parseDateAny(v){
   return '';
 }
 const normH=s=>String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z]/g,'');
-const FIELD={FECHA:'fecha',TIPO:'tipo',MATRICULA:'matricula',ROLL:'rol',ROL:'rol',MISION:'mision',HORAS:'horas',VUELO:'vuelo',TRIPULACION:'tripulacion',ZONAAERODROMO:'zona',ZONA:'zona',OBSERVACIONES:'obs'};
+const FIELD={FECHA:'fecha',TIPO:'tipo',MATRICULA:'matricula',ROLL:'rol',ROL:'rol',MISION:'mision',CLAVE:'mision',HORAS:'horas',VUELO:'vuelo',TRIPULACION:'tripulacion',ZONAAERODROMO:'zona',ZONA:'zona',OBSERVACIONES:'obs'};
 
 function tableToFlights(header,rows){
   const map={};
@@ -308,79 +401,82 @@ async function readXlsx(buf){
   const rows=nums.filter(r=>r>hr).map(r=>Array.from((grid.get(r)||[]).slice(0,10),v=>v==null?'':v));
   return {sheet:pick.name,header,rows};
 }
-
-function matchFlights(flights,rule){
-  return flights.filter(f=>(!rule.tipo||f.tipo===rule.tipo)&&(rule.source==='any'||(rule.source==='sim')===isSim(f)));
-}
-function evalRule(rule,flights,today){
-  const list=matchFlights(flights,rule);
-  if(rule.kind==='recency'){
-    const last=list.reduce((a,f)=>f.date>a?f.date:a,'');
-    if(!last) return {state:'late',head:'Sin registros',detail:'No hay ningún vuelo o sesión que cuente para este requisito.'};
-    const due=addDays(last,rule.days), left=diffDays(due,today);
-    const state=left<0?'late':left<=rule.warn?'warn':'ok';
-    const head=left<0?`Vencido hace ${-left} d`:left===0?'Vence hoy':`Quedan ${left} d`;
-    return {state,head,detail:`Último: ${fmtDate(last)} · ${left<0?'venció':'vence'} el ${fmtDate(due)}`};
-  }
-  const from=rule.calYear?today.slice(0,4)+'-01-01':addDays(today,-rule.days+1);
-  const have=list.filter(f=>f.date>=from&&f.date<=today).reduce((a,f)=>a+f.min,0);
-  const need=Math.round(rule.hours*60);
-  const per=rule.calYear?`año ${today.slice(0,4)}`:`últimos ${rule.days} d`;
-  if(have>=need) return {state:'ok',head:`${hm(have)} de ${hm(need)} h`,detail:`Cumplido en ${per}`};
-  if(rule.calYear){
-    const dl=diffDays(today.slice(0,4)+'-12-31',today);
-    return {state:dl<=rule.warn?'late':'warn',head:`Faltan ${hm(need-have)} h`,detail:`${hm(have)} de ${hm(need)} h en ${per} · quedan ${dl} d de año`};
-  }
-  return {state:'late',head:`Faltan ${hm(need-have)} h`,detail:`${hm(have)} de ${hm(need)} h en ${per}`};
-}
 /*PURE-END*/
 
 /* ---------- App ---------- */
+const VER='2.0';
 const KEY='libro-vuelo-v1';
 const ROLES=['PIC','SIC','SPIC','PICUS'];
 const TYPE_ORDER=['EC120','EC135 P2+','EC135 P3','H135 P3H'];
+const TYPE_COLOR={'EC135 P2+':'var(--a1)','EC135 P3':'var(--a2)','H135 P3H':'var(--a3)'};
 const MISSION_NAMES={SC:'Seguridad ciudadana',CB:'Cercos y batidas',OE:'Operaciones especiales',VO:'Vigilancia de objetivos',OP:'Orden público',EV:'Grandes eventos',SIMULADOR:'Simulador'};
+const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MESES_L=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS=['dom','lun','mar','mié','jue','vie','sáb'];
+const FORM_TIPOS=['TÍTULO','HABILITACIÓN','CURSO'];
+const CIMA='Reconocimiento médico (CIMA)';
 let S={flights:[],rules:[],demo:false};
-let storageOK=true, editingId=null, editingRule=null, dl=null, pending=null;
+let V={q:'',ft:'',fy:'',fm:'',open:null,mon:null,fi:null};
+let storageOK=true, editingId=null, pending=null, noDl=false;
+const net={busy:0,err:'',okAt:0};
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ico=d=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
+const IC={
+  spin:'M12 3a9 9 0 1 0 9 9',
+  ok:'M5 12.5l4.5 4.5L19 7.5',
+  up:'M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 10.5a3.75 3.75 0 0 1 0 7.5M12 19v-7M9 14.5l3-3 3 3',
+  off:'M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 10.5a3.75 3.75 0 0 1 0 7.5H7ZM4 4l16 16',
+  bang:'M12 8v5M12 16.5v.01M12 3l9.5 17h-19L12 3Z',
+  heli:'M3 6h18M12 6v3M6 13c0-2.2 2.7-4 6-4s6 1.8 6 4-2.7 4-6 4H9l-3-4ZM18 13h3M8 20h8',
+  med:'M12 5v14M5 12h14M4 4h16v16H4z'
+};
 
 function seed(){
   const t=todayISO(), d=n=>addDays(t,-n);
-  const F=(n,tipo,mat,rol,mis,min,vuelo,zona)=>({id:uid(),date:d(n),tipo,matricula:mat,rol,mision:mis,min,vuelo,tripulacion:'',zona,obs:'Ejemplo'});
-  S={demo:true,sync:{url:'',token:'',pendingOps:[]},flights:[
+  const F=(n,tipo,mat,rol,mis,min,vuelo,zona,x)=>Object.assign({id:uid(),date:d(n),tipo,matricula:mat,rol,mision:mis,min,vuelo,tripulacion:'',zona,obs:'Ejemplo'},x||{});
+  S={demo:true,theme:'auto',sync:{url:'',token:'',pendingOps:[]},claves:[],cad:[],rules:[],form:[],flights:[
     F(3,'H135 P3H','321','SIC','VO',45,'VFR','Zona de ejemplo A'),
     F(9,'H135 P3H','321','SIC','EV',95,'VFR','Zona de ejemplo B'),
-    F(16,'EC135 P3','308','SIC','DE',70,'VFR','Zona de ejemplo A'),
-    F(24,'H135 P3H','321','SIC','SIMULADOR',120,'IFR','Simulador'),
+    F(16,'EC135 P3','308','SIC','SC',70,'VFR','Zona de ejemplo A'),
+    F(24,'H135 P3H','','SIC','SIMULADOR',120,'IFR','Simulador'),
     F(41,'EC135 P2+','301','SIC','SC',80,'VFR','Zona de ejemplo C'),
-    F(58,'H135 P3H','321','SIC','IA',102,'VFR','Zona de ejemplo B'),
-    F(85,'EC135 P3','308','SIC','VB',55,'VFR','Zona de ejemplo A'),
-    F(140,'EC120','','SPIC','ET',150,'VFR','ARMILLA'),
+    F(58,'H135 P3H','321','SIC','RE',102,'VFR','Zona de ejemplo B',{ciclos:3,heridos:1}),
+    F(85,'EC135 P3','308','SIC','VO',55,'VFR','Zona de ejemplo A'),
+    F(140,'EC135 P2+','301','SIC','OP',150,'VFR','Zona de ejemplo C'),
     F(210,'EC135 P2+','301','SIC','VO',64,'VFR','Zona de ejemplo C'),
-    F(300,'H135 P3H','321','SIC','RE',88,'IFR','Zona de ejemplo B')
-  ],rules:[
-    {id:uid(),demo:true,name:'Ejemplo: actividad en H135 P3H',kind:'recency',tipo:'H135 P3H',source:'real',days:30,hours:0,calYear:false,warn:7},
-    {id:uid(),demo:true,name:'Ejemplo: simulador cada 180 días',kind:'recency',tipo:'',source:'sim',days:180,hours:0,calYear:false,warn:15},
-    {id:uid(),demo:true,name:'Ejemplo: 10 h en 90 días',kind:'hours',tipo:'',source:'real',days:90,hours:10,calYear:false,warn:15}
+    F(300,'H135 P3H','321','SIC','RE',88,'IFR','Zona de ejemplo B',{ciclos:2})
   ]};
 }
 function load(){
   try{
     const raw=localStorage.getItem(KEY);
-    if(raw){ const o=JSON.parse(raw); if(o&&Array.isArray(o.flights)){ S={flights:o.flights,rules:o.rules||[],demo:!!o.demo,sync:o.sync||{url:'',token:'',pendingOps:[]},claves:o.claves||[],cad:o.cad||[]}; return; } }
+    if(raw){ const o=JSON.parse(raw); if(o&&Array.isArray(o.flights)){
+      S={flights:o.flights,rules:o.rules||[],demo:!!o.demo,sync:o.sync||{url:'',token:'',pendingOps:[]},claves:o.claves||[],cad:o.cad||[],form:Array.isArray(o.form)?o.form:[],theme:o.theme||'auto'};
+      S.sync.pendingOps=S.sync.pendingOps||[];
+      return;
+    } }
   }catch(e){ storageOK=false; }
   seed();
 }
 function save(){
   try{ localStorage.setItem(KEY,JSON.stringify(S)); if(!storageOK) storageOK=true; }catch(e){ storageOK=false; }
 }
-function leaveDemo(){ if(S.demo){ S.flights=[]; S.rules=S.rules.filter(r=>!r.demo); S.demo=false; } }
+function leaveDemo(){ if(S.demo){ S.flights=[]; S.rules=[]; S.demo=false; } }
+function applyTheme(){
+  const t=S.theme||'auto', r=document.documentElement;
+  if(t==='auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme',t);
+}
 
-/* ---------- Google Sheets sync ---------- */
+/* ---------- Sincronización con la Hoja de Google ---------- */
 function syncConfigured(){ return !!(S.sync && S.sync.url && S.sync.token); }
-async function apiGet(action){
+const pend=()=>(S.sync&&S.sync.pendingOps)||[];
+async function call(fn){
+  net.busy++; updateSync();
+  try{ return await fn(); } finally{ net.busy--; updateSync(); }
+}
+function apiGet(action){ return call(async()=>{
   const u=new URL(S.sync.url);
   u.searchParams.set('action',action);
   u.searchParams.set('token',S.sync.token);
@@ -388,77 +484,136 @@ async function apiGet(action){
   const r=await fetch(u.toString(),{cache:'no-store'});
   if(!r.ok) throw new Error('HTTP '+r.status);
   const j=await r.json();
-  if(!j.ok) throw new Error(j.error||'error');
+  if(!j.ok){ const e=new Error(j.error||'error'); e.server=true; throw e; }
   return j;
-}
-async function apiPost(action,payload){
-  const r=await fetch(S.sync.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:S.sync.token,action,payload:payload||{}})});
+}); }
+function apiPost(action,payload,op){ return call(async()=>{
+  const r=await fetch(S.sync.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:S.sync.token,action,payload:payload||{},op:op||uid()})});
   if(!r.ok) throw new Error('HTTP '+r.status);
   const j=await r.json();
   if(!j.ok){ const e=new Error(j.error||'error'); e.server=true; throw e; }
+  net.okAt=Date.now(); setTimeout(updateSync,2400);
   return j;
-}
+}); }
 function remoteToLocal(r){
-  return {id:uid(),rowId:r.rowId,date:r.fecha,tipo:r.tipo||'',matricula:r.matricula||'',rol:r.rol||'',mision:r.clave||'',min:r.min||0,vuelo:r.vuelo||'',tripulacion:r.tripulacion||'',zona:r.zona||'',obs:r.obs||'',ciclos:r.ciclos||0,heridos:r.heridos||0,fallecidos:r.fallecidos||0};
+  return {id:uid(),rowId:r.rowId,ref:r.ref||'',date:r.fecha,tipo:r.tipo||'',matricula:r.matricula||'',rol:r.rol||'',mision:r.clave||'',min:r.min||0,vuelo:r.vuelo||'',tripulacion:r.tripulacion||'',zona:r.zona||'',obs:r.obs||'',ciclos:r.ciclos||0,heridos:r.heridos||0,fallecidos:r.fallecidos||0};
 }
 function localToRemote(f){
-  return {rowId:f.rowId,fecha:f.date,tipo:f.tipo||'',matricula:f.matricula||'',rol:f.rol||'',clave:f.mision||'',min:f.min||0,vuelo:f.vuelo||'',tripulacion:f.tripulacion||'',zona:f.zona||'',obs:f.obs||'',ciclos:f.ciclos||0,heridos:f.heridos||0,fallecidos:f.fallecidos||0};
+  return {rowId:f.rowId,ref:f.ref||undefined,fecha:f.date,tipo:f.tipo||'',matricula:f.matricula||'',rol:f.rol||'',clave:f.mision||'',min:f.min||0,vuelo:f.vuelo||'',tripulacion:f.tripulacion||'',zona:f.zona||'',obs:f.obs||'',ciclos:f.ciclos||0,heridos:f.heridos||0,fallecidos:f.fallecidos||0};
 }
+const sortForm=a=>[...a].sort((x,y)=>String(x.fecha||'').localeCompare(String(y.fecha||'')));
 async function syncPullAll(){
   const res=await apiGet('todo');
-  S.flights=(res.flights||[]).map(remoteToLocal);
-  S.rules=(S.rules||[]).filter(r=>!r.demo);
+  // Lo que aún no ha subido (añadidos o ediciones hechas sin cobertura) se conserva encima de lo que llega.
+  const ops=pend().filter(o=>o.op==='add'||o.op==='update');
+  const mine=ops.map(o=>S.flights.find(f=>f.id===o.localId)).filter(Boolean);
+  const dels=new Set(pend().filter(o=>o.op==='delete').map(o=>o.ref||('#'+o.rowId)));
+  let list=(res.flights||[]).map(remoteToLocal).filter(f=>!dels.has(f.ref)&&!dels.has('#'+f.rowId));
+  for(const m of mine){
+    const i=m.rowId?list.findIndex(f=>(m.ref&&f.ref===m.ref)||f.rowId===m.rowId):-1;
+    if(i>=0) list[i]=m; else list.push(m);
+  }
+  S.flights=list;
+  S.rules=[];
   if(Array.isArray(res.claves)) S.claves=res.claves;
   if(Array.isArray(res.caducidades)) S.cad=res.caducidades;
+  if(Array.isArray(res.formacion)&&!pend().some(o=>o.op==='form')) S.form=sortForm(res.formacion);
   S.demo=false;
   S.sync.lastOk=Date.now();
   save();
   return res;
 }
 async function connectSync(url,token){
-  S.sync=S.sync||{};
-  S.sync.url=url; S.sync.token=token; S.sync.pendingOps=S.sync.pendingOps||[];
+  S.sync={url,token,pendingOps:[]};
   save();
-  await syncPullAll();
+  try{ await syncPullAll(); net.err=''; }
+  catch(e){ S.sync={url:'',token:'',pendingOps:[]}; save(); throw e; }
 }
-function disconnectSync(){ S.sync={url:'',token:'',pendingOps:[]}; save(); }
-function queuePending(op,localId,rowId,fecha){
-  S.sync=S.sync||{url:'',token:'',pendingOps:[]};
-  S.sync.pendingOps=S.sync.pendingOps||[];
-  S.sync.pendingOps.push({op,localId,rowId,fecha});
-  save();
+function disconnectSync(){ S.sync={url:'',token:'',pendingOps:[]}; net.err=''; save(); }
+function queuePending(o){
+  S.sync.pendingOps=pend();
+  if(o.op==='form'&&S.sync.pendingOps.some(x=>x.op==='form')) return;
+  if(o.localId&&S.sync.pendingOps.some(x=>x.localId===o.localId&&x.op!=='delete')) return;
+  S.sync.pendingOps.push(o);
+  save(); updateSync();
 }
 async function drainPending(){
-  if(!syncConfigured()||!S.sync.pendingOps||!S.sync.pendingOps.length) return;
-  const q=[...S.sync.pendingOps];
-  const remaining=[];
-  for(const op of q){
+  if(!syncConfigured()) return;
+  const q=[...pend()]; if(!q.length) return;
+  let rest=[];
+  for(let i=0;i<q.length;i++){
+    const op=q[i];
     try{
-      if(op.op==='delete'){
-        if(op.rowId) await apiPost('delete',{rowId:op.rowId,fecha:op.fecha});
-      } else {
+      if(op.op==='delete'){ if(op.rowId) await apiPost('delete',{rowId:op.rowId,fecha:op.fecha,ref:op.ref||undefined},op.opId); }
+      else if(op.op==='form'){ const r=await apiPost('setFormacion',{items:S.form||[]},op.opId); if(Array.isArray(r.formacion)) S.form=sortForm(r.formacion); }
+      else{
         const f=S.flights.find(x=>x.id===op.localId);
         if(f){
-          const res=await apiPost(f.rowId?'update':'add',localToRemote(f));
-          if(res.flight&&res.flight.rowId) f.rowId=res.flight.rowId;
+          const res=await apiPost(f.rowId?'update':'add',localToRemote(f),op.opId);
+          if(res.flight){ f.rowId=res.flight.rowId||f.rowId; f.ref=res.flight.ref||''; }
         }
       }
-    }catch(e){ if(!e.server) remaining.push(op); }
+    }catch(e){
+      if(e.server) toast('Tu hoja no aceptó un cambio pendiente: '+e.message);
+      else { rest=q.slice(i); break; }   // sin red: se conserva el orden y se reintenta luego
+    }
+    S.sync.pendingOps=q.slice(i+1); save();
   }
-  S.sync.pendingOps=remaining;
-  save();
+  S.sync.pendingOps=rest; save();
 }
-function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('on'),2600); }
-function modal(html){ $('#modalbox').innerHTML=html; $('#modal').classList.add('on'); const b=$('#modalbox button'); if(b) b.focus(); }
+const typing=()=>{ const a=document.activeElement; return tab()==='anadir'||$('#modal').classList.contains('on')||(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); };
+let syncing=false;
+async function syncAll(force){
+  if(!syncConfigured()||syncing) return;
+  syncing=true;
+  try{ await drainPending(); await syncPullAll(); net.err=''; }
+  catch(e){ net.err=navigator.onLine?e.message:''; }
+  syncing=false;
+  if(force||!typing()) render(); else updateSync();
+}
+function syncState(){
+  if(!syncConfigured()) return {c:'off',i:IC.off,t:''};
+  const np=pend().length;
+  if(net.busy) return {c:'busy',i:IC.spin,t:'Sincronizando con tu hoja…'};
+  if(!navigator.onLine) return {c:'warn',i:IC.up,n:np,t:np?`Sin conexión. ${np} cambio${np>1?'s':''} guardado${np>1?'s':''} en el móvil; se subirá${np>1?'n':''} solo${np>1?'s':''} al recuperar cobertura.`:'Sin conexión. Estás viendo los últimos datos guardados.'};
+  if(np) return {c:'warn',i:IC.up,n:np,t:`${np} cambio${np>1?'s':''} pendiente${np>1?'s':''} de subir a tu hoja. Se reintenta solo.`};
+  if(net.err) return {c:'err',i:IC.bang,t:'No se pudo sincronizar con tu hoja: '+net.err};
+  if(Date.now()-net.okAt<2200) return {c:'ok',i:IC.ok,t:'Guardado en tu hoja'};
+  return {c:'idle',i:'',t:''};
+}
+function updateSync(){
+  const el=$('#sync'); if(!el) return;
+  const s=syncState();
+  el.className='sync '+s.c;
+  el.innerHTML=(s.i?ico(s.i):'')+(s.n?`<span>${s.n}</span>`:'');
+  el.dataset.tip=s.t;
+  el.setAttribute('aria-label',s.t||(s.c==='off'?'Sin conectar con tu hoja':'Todo guardado'));
+  const dot=$('#navdot');
+  if(dot){ const st=cimaState(todayISO()); dot.hidden=!(st&&st.st!=='ok'); dot.className='dot'+(st&&st.st==='warn'?' warn':''); }
+}
+window.addEventListener('online',()=>{ updateSync(); syncAll(); });
+window.addEventListener('offline',updateSync);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&syncConfigured()&&Date.now()-(S.sync.lastOk||0)>60000) syncAll(); });
+
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('on'),msg.length>60?5200:2600); }
+function modal(html){ $('#modalbox').innerHTML=html; $('#modal').classList.add('on'); }
 function closeModal(){ $('#modal').classList.remove('on'); pending=null; }
 
-/* ---------- stats helpers ---------- */
+/* ---------- cálculos ---------- */
 const sum=(a,f)=>a.reduce((s,x)=>s+f(x),0);
 function types(){
   const seen=[...new Set(S.flights.map(f=>f.tipo).filter(Boolean))];
   return [...TYPE_ORDER.filter(t=>seen.includes(t)),...seen.filter(t=>!TYPE_ORDER.includes(t)).sort()];
 }
-function ago(iso,today){ if(!iso) return '—'; const n=diffDays(today,iso); return `${fmtDate(iso)} · ${n===0?'hoy':'hace '+n+' d'}`; }
+const colorOf=t=>TYPE_COLOR[t]||'var(--a4)';
+function haceTxt(n){ return n===0?'hoy':n===1?'ayer':n<0?`en ${-n} días`:`hace ${n} días`; }
+function lapso(iso,today){
+  let m=(+today.slice(0,4)-+iso.slice(0,4))*12+(+today.slice(5,7)-+iso.slice(5,7)); if(today.slice(8,10)<iso.slice(8,10)) m--;
+  if(m<0) return '';
+  if(m<1) return haceTxt(diffDays(today,iso));
+  const y=Math.floor(m/12), r=m%12;
+  return 'hace '+[y?`${y} año${y>1?'s':''}`:'',r?`${r} mes${r>1?'es':''}`:''].filter(Boolean).join(' y ');
+}
 function winMin(list,today,days){ const from=addDays(today,-days+1); return sum(list.filter(f=>f.date>=from&&f.date<=today),f=>f.min); }
 function lastOf(list){ return list.reduce((a,f)=>f.date>a?f.date:a,''); }
 function claveDesc(k){
@@ -468,323 +623,388 @@ function claveDesc(k){
 }
 const nInt=v=>{ const n=parseInt(v,10); return isFinite(n)&&n>0?n:0; };
 const rescatados=f=>nInt(f.heridos)+nInt(f.fallecidos);
+const plural=(n,s,p)=>`${n} ${n===1?s:(p||s+'s')}`;
 function addMonthsISO(iso,m){ const y=+iso.slice(0,4), mo=+iso.slice(5,7)-1+m, d=+iso.slice(8,10); const t=new Date(Date.UTC(y,mo,1)); const last=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+1,0)).getUTCDate(); return `${t.getUTCFullYear()}-${pad2(t.getUTCMonth()+1)}-${pad2(Math.min(d,last))}`; }
-const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-function updateSyncPill(){
-  const el=document.getElementById('syncpill'); if(!el) return;
-  const np=(S.sync&&S.sync.pendingOps||[]).length;
-  let cls='off', txt='Solo en este móvil';
-  if(syncConfigured()){
-    if(!navigator.onLine){ cls='warn'; txt=np?`Sin conexión · ${np} pendiente${np>1?'s':''}`:'Sin conexión'; }
-    else if(np){ cls='warn'; txt=`${np} pendiente${np>1?'s':''} de subir`; }
-    else { cls='ok'; txt='✓ Guardado en tu hoja'; }
+const monName=k=>`${MESES_L[+k.slice(5,7)-1]} ${k.slice(0,4)}`;
+function months12(real,today){
+  const out=[]; const y=+today.slice(0,4), m=+today.slice(5,7);
+  for(let i=11;i>=0;i--){
+    let mm=m-i, yy=y; while(mm<1){ mm+=12; yy--; }
+    const key=`${yy}-${pad2(mm)}`, a=real.filter(f=>f.date.startsWith(key));
+    out.push({key,lbl:MESES[mm-1][0],min:sum(a,f=>f.min),n:a.length});
   }
-  el.className='syncpill '+cls; el.textContent=txt;
+  return out;
 }
-window.addEventListener('online',()=>{ updateSyncPill(); if(syncConfigured()) drainPending().then(()=>syncPullAll()).then(render).catch(()=>{}); });
-window.addEventListener('offline',updateSyncPill);
-function bars(items,fmtKey){
-  const max=Math.max(1,...items.map(i=>i.min));
-  return `<div class="bars">${items.map(i=>`<div class="brow"><span class="k" title="${esc(i.title||i.key)}">${esc(fmtKey?fmtKey(i.key):i.key)}</span><span class="track"><span class="fill" style="display:block;width:${(i.min/max*100).toFixed(1)}%"></span></span><span class="v num">${hm(i.min)} h${i.n!=null?` · ${i.n}`:''}</span></div>`).join('')}</div>`;
+function cimaState(today){
+  const c=(S.cad||[]).find(x=>x.concepto===CIMA);
+  if(!c||!c.ultima) return c?{st:'warn',none:true}:null;
+  const vence=addMonthsISO(c.ultima,c.meses||12), left=diffDays(vence,today), tot=Math.max(1,diffDays(vence,c.ultima));
+  return {st:left<0?'late':left<=60?'warn':'ok',left,vence,ultima:c.ultima,pct:Math.max(0,Math.min(100,left/tot*100))};
 }
+const habDe=t=>(S.form||[]).find(x=>x.aeronave===t&&x.fecha);
 
-/* ---------- views ---------- */
-function ruleCard(r,today,manage){
-  const e=evalRule(r,S.flights,today);
-  const label={ok:'Cumple',warn:'Atención',late:'No cumple'}[e.state];
-  return `<div class="rule ${e.state}"><span class="pill">${label}</span><div class="name">${esc(r.name)}</div><div class="head">${esc(e.head)}</div><div class="det">${esc(e.detail)}</div>${manage?`<div class="acts"><button class="small" data-act="rule-edit" data-id="${r.id}">Editar</button><button class="small danger" data-act="rule-del" data-id="${r.id}">Borrar</button></div>`:''}</div>`;
+/* ---------- vistas ---------- */
+function barRows(items){
+  const max=Math.max(1,...items.map(i=>i.min));
+  return `<div class="rows">${items.map(i=>`<div class="rw"><span class="t">${i.html}</span><span class="x">${hm(i.min)}<small>${i.sub||''}</small></span><span class="track"><span class="fill" style="width:${(i.min/max*100).toFixed(1)}%"></span></span></div>`).join('')}</div>`;
 }
 function viewResumen(){
   const today=todayISO(), year=today.slice(0,4);
   const real=S.flights.filter(f=>!isSim(f)), sim=S.flights.filter(isSim);
-  const lastReal=lastOf(real);
-  const ts=types();
-  const years=[...new Set(S.flights.map(f=>f.date.slice(0,4)))].sort().reverse();
-  const yearBars=years.map(y=>({key:y,min:sum(real.filter(f=>f.date.startsWith(y)),f=>f.min)}));
-  const monthBars=MESES.map((m,i)=>{ const pre=`${year}-${pad2(i+1)}`; const a=real.filter(f=>f.date.startsWith(pre)); return {key:m,min:sum(a,f=>f.min),n:a.length}; });
+  const total=sum(real,f=>f.min), lastReal=lastOf(real), ts=types();
+  const m12=months12(real,today), mmax=Math.max(1,...m12.map(x=>x.min));
+  const sel=m12.find(x=>x.key===V.mon)||m12[11];
+  const cs=cimaState(today);
   const ciclos=sum(S.flights,f=>nInt(f.ciclos)), her=sum(S.flights,f=>nInt(f.heridos)), fal=sum(S.flights,f=>nInt(f.fallecidos));
-  const ciclosY=sum(S.flights.filter(f=>f.date.startsWith(year)),f=>nInt(f.ciclos)), rescY=sum(S.flights.filter(f=>f.date.startsWith(year)),rescatados);
-  const desg=[her?`${her} herido${her>1?'s':''}`:'',fal?`${fal} fallecido${fal>1?'s':''}`:''].filter(Boolean).join(' · ')||'sin rescates anotados';
-  const mis={}; real.forEach(f=>{const k=(f.mision||'—').toUpperCase(); (mis[k]=mis[k]||{k,min:0,n:0,c:0,r:0}); mis[k].min+=f.min; mis[k].n++; mis[k].c+=nInt(f.ciclos); mis[k].r+=rescatados(f);});
+  const yr=S.flights.filter(f=>f.date.startsWith(year));
+  const mis={}; real.forEach(f=>{ const k=(f.mision||'—').toUpperCase(); (mis[k]=mis[k]||{k,min:0,n:0}); mis[k].min+=f.min; mis[k].n++; });
   const misList=Object.values(mis).sort((a,b)=>b.min-a.min);
-  const rows=ts.map(t=>{
-    const r=real.filter(f=>f.tipo===t), s=sim.filter(f=>f.tipo===t);
-    return `<tr><td><b>${esc(t)}</b></td><td class="r num"><b>${hm(sum(r,f=>f.min))}</b></td><td class="r num">${r.length}</td><td class="r num">${sum(r,f=>nInt(f.ciclos))}</td><td class="r num">${hm(sum(s,f=>f.min))}</td><td class="r num">${s.length}</td></tr>`;
-  }).join('');
-  const act=ts.map(t=>{
-    const r=real.filter(f=>f.tipo===t), s=sim.filter(f=>f.tipo===t);
-    return `<tr><td><b>${esc(t)}</b></td><td class="num">${ago(lastOf(r),today)}</td><td class="num">${ago(lastOf(s),today)}</td><td class="r num">${hm(winMin(r,today,30))}</td><td class="r num">${hm(winMin(r,today,90))}</td><td class="r num">${hm(winMin(r,today,365))}</td></tr>`;
-  }).join('');
-  const avg=real.length?Math.round(sum(real,f=>f.min)/real.length):0;
+  const roles={}; real.forEach(f=>{ const k=f.rol||'—'; roles[k]=(roles[k]||0)+f.min; });
+  const roleList=Object.entries(roles).sort((a,b)=>b[1]-a[1]);
+  const rc=['var(--a3)','var(--a1)','var(--a2)','var(--a4)'];
+  const years=[...new Set(real.map(f=>f.date.slice(0,4)))].sort().reverse();
+  const since=lastReal?diffDays(today,lastReal):null;
   return `
-  ${S.demo?`<div class="banner"><b>Datos de ejemplo.</b> Lo que ves es ficticio. Conecta tu Hoja de Google en <a href="#datos">Datos</a> o añade tu primer vuelo y los ejemplos desaparecen.</div>`:''}
-  ${!storageOK?`<div class="banner"><b>Este navegador no guarda datos aquí.</b> Lo que añadas se perderá al cerrar.</div>`:''}
-  <section class="panel"><div class="hero">
-    <div class="odo"><span class="lbl">Horas de vuelo</span><span class="val">${hm(sum(real,f=>f.min))}<small>H</small></span><span class="sub">${real.length} salidas · ${hm(sum(real.filter(f=>f.date.startsWith(year)),f=>f.min))} h en ${year}</span></div>
-    <div class="tiles">
-      <div class="tile"><span class="lbl">Simulador</span><span class="val">${hm(sum(sim,f=>f.min))}</span><span class="sub">${sim.length} ${sim.length===1?'sesión':'sesiones'}</span></div>
-      <div class="tile"><span class="lbl">Salidas</span><span class="val">${real.length}</span><span class="sub">media ${hm(avg)} h por salida</span></div>
-      <div class="tile"><span class="lbl">Último vuelo</span><span class="val" style="font-size:19px">${lastReal?fmtDate(lastReal):'—'}</span><span class="sub">${lastReal?(diffDays(today,lastReal)===0?'hoy':'hace '+diffDays(today,lastReal)+' días'):'sin registros'}</span></div>
-      <div class="tile"><span class="lbl">Últimos 90 días</span><span class="val">${hm(winMin(real,today,90))}</span><span class="sub">${hm(winMin(real,today,365))} en 365 días</span></div>
-    </div></div></section>
-  <section class="panel"><header><h2>Rescate</h2><span class="hint">grúa y personas rescatadas</span></header>
-    <div class="rescue">
-      <div class="odo"><span class="lbl">Ciclos de grúa</span><span class="val">${ciclos}</span><span class="sub">${ciclosY} en ${year}</span></div>
-      <div class="odo"><span class="lbl">Rescatados</span><span class="val">${her+fal}</span><span class="sub">${desg}</span></div>
-    </div></section>
-  <section class="panel"><header><h2>${year} por meses</h2><span class="hint">horas · salidas</span></header>${bars(monthBars)}</section>
-  <section class="panel"><header><h2>Actividad reciente por aeronave</h2><span class="hint">horas en ventanas móviles</span></header>
-    <div class="tablewrap"><table><thead><tr><th>Aeronave</th><th>Último vuelo</th><th>Último simulador</th><th class="r">30 d</th><th class="r">90 d</th><th class="r">365 d</th></tr></thead><tbody>${act||'<tr><td colspan="6" class="hint">Sin datos.</td></tr>'}</tbody></table></div></section>
-  <section class="panel"><header><h2>Horas por aeronave</h2></header>
-    <div class="tablewrap"><table><thead><tr><th>Aeronave</th><th class="r">Horas</th><th class="r">Salidas</th><th class="r">Ciclos grúa</th><th class="r">Simulador</th><th class="r">Sesiones sim</th></tr></thead><tbody>${rows}
-    <tr class="total"><td>Total</td><td class="r num">${hm(sum(real,f=>f.min))}</td><td class="r num">${real.length}</td><td class="r num">${ciclos}</td><td class="r num">${hm(sum(sim,f=>f.min))}</td><td class="r num">${sim.length}</td></tr></tbody></table></div></section>
-  <section class="panel"><header><h2>Por clave de servicio</h2><span class="hint">horas · salidas · grúa · rescatados</span></header>
-    <div class="tablewrap"><table style="min-width:420px"><thead><tr><th>Clave</th><th class="r">Horas</th><th class="r">Salidas</th><th class="r">Grúa</th><th class="r">Resc.</th></tr></thead><tbody>${misList.map(m=>`<tr><td><span class="tag">${esc(m.k)}</span>${claveDesc(m.k)?`<span class="cdesc">(${esc(claveDesc(m.k))})</span>`:''}</td><td class="r num">${hm(m.min)}</td><td class="r num">${m.n}</td><td class="r num">${m.c||''}</td><td class="r num">${m.r||''}</td></tr>`).join('')||'<tr><td colspan="5" class="hint">Sin datos.</td></tr>'}</tbody></table></div></section>
-  <section class="panel"><header><h2>Por año</h2><span class="hint">horas de vuelo</span></header>${yearBars.length?bars(yearBars):'<div class="hint">Sin datos.</div>'}</section>`;
+  ${S.demo?`<div class="banner"><b>Datos de ejemplo.</b> Conecta tu hoja de Google en <a href="#datos">Datos</a> o añade tu primer vuelo y los ejemplos desaparecen.</div>`:''}
+  ${!storageOK?`<div class="banner late"><b>Este navegador no guarda datos.</b> Lo que añadas sin conexión se perderá al cerrar.</div>`:''}
+  <section class="hero" aria-label="Horas de vuelo">
+    <div class="total">
+      <div><div class="lbl">Horas de vuelo</div><div class="val">${Math.floor(total/60)}<small>:${pad2(total%60)}</small></div></div>
+      <div class="side"><b>${plural(real.length,'salida')}</b><span>${hm(sum(real.filter(f=>f.date.startsWith(year)),f=>f.min))} h en ${year}</span>${sim.length?`<span>${hm(sum(sim,f=>f.min))} h de simulador</span>`:''}</div>
+    </div>
+    <div class="cols" role="group" aria-label="Horas por mes, últimos 12 meses">
+      ${m12.map(x=>`<button type="button" class="col${x.key===sel.key?' on':''}" data-act="pick-month" data-k="${x.key}" aria-label="${monName(x.key)}: ${hm(x.min)} horas">${x.min>=30?`<b>${Math.round(x.min/60)}</b>`:''}<i style="height:${x.min?Math.max(4,x.min/mmax*78).toFixed(1):0}%"></i><span>${x.lbl}</span></button>`).join('')}
+    </div>
+    <div class="pick"><span><b style="text-transform:capitalize">${monName(sel.key)}</b> &nbsp;${hm(sel.min)} h en ${plural(sel.n,'salida')}</span>${sel.n?`<a href="#vuelos" data-act="see-month" data-k="${sel.key}">Ver vuelos</a>`:''}</div>
+    <div class="win">
+      <div><span>30 días</span><b>${hm(winMin(real,today,30))}</b></div>
+      <div><span>90 días</span><b>${hm(winMin(real,today,90))}</b></div>
+      <div><span>365 días</span><b>${hm(winMin(real,today,365))}</b></div>
+    </div>
+  </section>
+  <div class="duo">
+    <div class="stat"><span class="k">${ico(IC.heli)}Último vuelo</span><span class="v">${since==null?'—':since===0?'Hoy':since===1?'Ayer':since+' d'}</span><span class="s">${lastReal?fmtDate(lastReal):'sin vuelos anotados'}</span></div>
+    ${cs&&!cs.none?`<a class="stat ${cs.st}" href="#piloto"><span class="k">${ico(IC.med)}Reconocimiento CIMA</span><span class="v">${cs.left<0?'Caducado':cs.left+' d'}</span><span class="s">${cs.left<0?'venció el':'vence el'} ${fmtDate(cs.vence)}</span></a>`
+      :`<a class="stat" href="#piloto"><span class="k">${ico(IC.med)}Reconocimiento CIMA</span><span class="v">—</span><span class="s">${syncConfigured()?'pon la fecha en Piloto':'conecta tu hoja para verlo'}</span></a>`}
+  </div>
+  <section class="card"><header><h2>Aeronaves</h2><span class="hint">horas de vuelo real</span></header>
+    ${total?`<div class="split">${ts.map(t=>{ const m=sum(real.filter(f=>f.tipo===t),f=>f.min); return m?`<i style="flex:${m};background:${colorOf(t)}" title="${esc(t)}"></i>`:''; }).join('')}</div>`:''}
+    ${ts.map(t=>{
+      const r=real.filter(f=>f.tipo===t), s=sim.filter(f=>f.tipo===t), l=lastOf(r), hb=habDe(t), c=sum(r,f=>nInt(f.ciclos));
+      return `<div class="ac"><span class="sw" style="background:${colorOf(t)}"></span><span class="nm">${esc(t)}</span><span class="hr">${hm(sum(r,f=>f.min))}</span>
+        <span class="meta"><span><b>${r.length}</b> ${r.length===1?'salida':'salidas'}</span>${l?`<span>último ${fmtDate(l)}</span>`:''}${c?`<span><b>${c}</b> ciclos de grúa</span>`:''}${s.length?`<span><b>${hm(sum(s,f=>f.min))}</b> h simulador</span>`:''}${hb?`<span>habilitado ${fmtDate(hb.fecha)}</span>`:''}</span></div>`;
+    }).join('')||'<div class="hint">Sin vuelos todavía.</div>'}
+  </section>
+  <div class="duo">
+    <div class="stat"><span class="k">Ciclos de grúa</span><span class="v">${ciclos}</span><span class="s">${sum(yr,f=>nInt(f.ciclos))} en ${year}</span></div>
+    <div class="stat"><span class="k">Rescatados</span><span class="v">${her+fal}</span><span class="s">${[her?plural(her,'herido'):'',fal?plural(fal,'fallecido'):''].filter(Boolean).join(', ')||'sin rescates anotados'}</span></div>
+  </div>
+  <section class="card"><header><h2>Por clave de servicio</h2></header>
+    ${misList.length?barRows(misList.map(m=>({min:m.min,sub:m.n+' sal.',html:`<span class="tag">${esc(m.k)}</span>${esc(claveDesc(m.k))}`}))):'<div class="hint">Sin datos.</div>'}
+  </section>
+  ${roleList.length?`<section class="card"><header><h2>Por rol</h2></header>
+    <div class="split">${roleList.map(([k,m],i)=>m?`<i style="flex:${m};background:${rc[Math.min(i,3)]}"></i>`:'').join('')}</div>
+    <div class="legend">${roleList.map(([k,m],i)=>`<span><i style="background:${rc[Math.min(i,3)]}"></i><b>${esc(k)}</b> ${hm(m)} h</span>`).join('')}</div></section>`:''}
+  ${years.length>1?`<section class="card"><header><h2>Por año</h2></header>${barRows(years.map(y=>{ const a=real.filter(f=>f.date.startsWith(y)); return {min:sum(a,f=>f.min),sub:plural(a.length,'salida'),html:`<b>${y}</b>`}; }))}</section>`:''}`;
 }
 
-function viewVigencias(){
-  const today=todayISO();
-  const cad=S.cad||[];
-  const get=c=>cad.find(x=>x.concepto===c);
-  const cima=get('Reconocimiento médico (CIMA)');
-  let cimaCard='';
-  if(cima&&cima.ultima){
-    const vence=addMonthsISO(cima.ultima,cima.meses||12), d=diffDays(vence,today);
-    const st=d<0?'late':d<=60?'warn':'ok', lbl={ok:'En vigor',warn:'Renovar pronto',late:'Caducado'}[st];
-    cimaCard=`<div class="rule ${st}"><span class="pill">${lbl}</span><div class="name">Reconocimiento médico CIMA</div><div class="head">${d<0?`Caducó hace ${-d} días`:`Quedan ${d} días`}</div><div class="det">Último: ${fmtDate(cima.ultima)} · vence el ${fmtDate(vence)} · aviso 60 días antes</div><div class="acts"><button class="small" data-act="cad-edit" data-c="Reconocimiento médico (CIMA)">Cambiar fecha</button></div></div>`;
-  } else if(cima){
-    cimaCard=`<div class="rule warn"><span class="pill">Sin fecha</span><div class="name">Reconocimiento médico CIMA</div><div class="acts"><button class="small" data-act="cad-edit" data-c="Reconocimiento médico (CIMA)">Poner fecha</button></div></div>`;
-  }
-  const sims=S.flights.filter(isSim);
-  const simRows=types().map(t=>({t,l:lastOf(sims.filter(f=>f.tipo===t))})).filter(x=>x.l);
-  const row=(n,iso,c)=>`<div class="cadrow"><div><div class="n">${esc(n)}</div><div class="d">${iso?ago(iso,today):'sin fecha'}</div></div>${c?`<button class="small" data-act="cad-edit" data-c="${esc(c)}">Cambiar</button>`:''}</div>`;
-  const others=['Entrenamiento aeromédico (CIMA)','Supervivencia en el mar'].map(c=>{const x=get(c); return x?row(c,x.ultima,c):'';}).join('');
-  return `
-  <section class="panel"><header><h2>Caducidad</h2><span class="hint">hoy ${fmtDate(today)}</span></header>
-    ${cimaCard?`<div class="rules">${cimaCard}</div>`:`<div class="empty">${syncConfigured()?'No encuentro el reconocimiento médico en la pestaña CADUCIDADES de tu hoja.':'Conecta tu Hoja de Google en Datos para ver tu reconocimiento médico.'}</div>`}</section>
-  <section class="panel"><header><h2>Última vez realizado</h2><span class="hint">solo informativo, sin alarmas</span></header>
-    <div class="cadlist">${others}${simRows.map(x=>row('Simulador '+x.t,x.l,'')).join('')}${!others&&!simRows.length?'<div class="hint">Sin datos.</div>':''}</div>
-    <p class="hint">El simulador se toma de tus vuelos con clave SIMULADOR.</p></section>`;
+function flightCard(f){
+  const dt=new Date(Date.UTC(+f.date.slice(0,4),+f.date.slice(5,7)-1,+f.date.slice(8,10)));
+  const open=V.open===f.id, sm=isSim(f), d=claveDesc(f.mision);
+  const waiting=!f.rowId&&syncConfigured();
+  return `<article class="fl${sm?' sim':''}" data-act="fl-open" data-id="${f.id}" tabindex="0" role="button" aria-expanded="${open}">
+    <div class="d"><b>${+f.date.slice(8,10)}</b><span>${DIAS[dt.getUTCDay()]}</span></div>
+    <div class="t"><span class="tag">${esc(sm?'SIM':f.mision||'—')}</span>${esc(f.obs||(sm?'Simulador':d)||'')}</div>
+    <div class="h">${hm(f.min)}</div>
+    <div class="m"><b>${esc(f.tipo)}</b>${f.matricula?`<span>${esc(f.matricula)}</span>`:''}${f.rol?`<span>${esc(f.rol)}</span>`:''}${f.vuelo==='IFR'?'<span>IFR</span>':''}${f.zona?`<span>${esc(f.zona)}</span>`:''}</div>
+    ${(nInt(f.ciclos)||rescatados(f)||waiting)?`<div class="m badges" style="margin-top:5px">${nInt(f.ciclos)?`<span class="badge">Grúa ${nInt(f.ciclos)}</span>`:''}${nInt(f.heridos)?`<span class="badge r">${plural(nInt(f.heridos),'herido')}</span>`:''}${nInt(f.fallecidos)?`<span class="badge r">${plural(nInt(f.fallecidos),'fallecido')}</span>`:''}${waiting?'<span class="badge">pendiente de subir</span>':''}</div>`:''}
+    ${open?`<div class="more"><dl>
+      ${d&&!sm?`<dt>Clave</dt><dd>${esc(f.mision)} · ${esc(d)}</dd>`:''}
+      ${f.tripulacion?`<dt>Tripulación</dt><dd>${esc(f.tripulacion)}</dd>`:''}
+      ${f.zona?`<dt>Zona</dt><dd>${esc(f.zona)}</dd>`:''}
+      <dt>Reglas</dt><dd>${esc(f.vuelo||'VFR')}</dd>
+      ${f.obs?`<dt>Notas</dt><dd>${esc(f.obs)}</dd>`:''}</dl>
+      <div class="row"><button class="small" data-act="edit" data-id="${f.id}">Editar</button><button class="small danger" data-act="del" data-id="${f.id}">Borrar</button></div></div>`:''}
+  </article>`;
 }
-
 function viewVuelos(){
-  const q=(dl&&dl.q)||'', ft=(dl&&dl.ft)||'';
-  const list=S.flights.filter(f=>(!ft||f.tipo===ft)&&(!q||[f.tipo,f.matricula,f.rol,f.mision,f.tripulacion,f.zona,f.obs,fmtDate(f.date)].join(' ').toLowerCase().includes(q.toLowerCase())))
-    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  const q=V.q.toLowerCase();
+  const years=[...new Set(S.flights.map(f=>f.date.slice(0,4)))].sort().reverse();
+  const list=S.flights.filter(f=>(!V.ft||f.tipo===V.ft)&&(!V.fy||f.date.startsWith(V.fy))&&(!V.fm||f.date.startsWith(V.fm))&&(!q||[f.tipo,f.matricula,f.rol,f.mision,claveDesc(f.mision),f.tripulacion,f.zona,f.obs,fmtDate(f.date)].join(' ').toLowerCase().includes(q)))
+    .sort((a,b)=>b.date.localeCompare(a.date)||(b.rowId||1e9)-(a.rowId||1e9));
+  const groups=[]; list.forEach(f=>{ const k=f.date.slice(0,7); let g=groups[groups.length-1]; if(!g||g.k!==k){ g={k,a:[]}; groups.push(g); } g.a.push(f); });
+  const chip=(act,val,lbl,on)=>`<button type="button" class="chipb${on?' on':''}" data-act="${act}" data-v="${esc(val)}">${esc(lbl)}</button>`;
   return `
-  ${S.demo?`<div class="banner"><b>Datos de ejemplo.</b> Se borran al añadir tu primer vuelo o al importar.</div>`:''}
-  <section class="panel"><header><h2>Vuelos</h2><span class="hint">${list.length} de ${S.flights.length} · ${hm(sum(list,f=>f.min))} h</span></header>
-    <div class="filters"><input id="q" type="search" placeholder="Buscar en todos los campos" value="${esc(q)}" aria-label="Buscar"><select id="ft" aria-label="Filtrar por aeronave"><option value="">Todas las aeronaves</option>${types().map(t=>`<option${t===ft?' selected':''}>${esc(t)}</option>`).join('')}</select></div>
-    <div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Aeronave</th><th>Mat.</th><th>Rol</th><th>Clave</th><th class="r">Horas</th><th>Reglas</th><th>Zona</th><th>Observaciones</th><th></th></tr></thead><tbody>
-    ${list.map(f=>`<tr><td class="num">${fmtDate(f.date)}</td><td>${esc(f.tipo)}</td><td class="num">${esc(f.matricula)}</td><td>${esc(f.rol)}</td><td><span class="tag">${esc(f.mision)}</span>${claveDesc(f.mision)?`<span class="cdesc">(${esc(claveDesc(f.mision))})</span>`:''}</td><td class="r num">${hm(f.min)}</td><td>${esc(f.vuelo)}</td><td>${esc(f.zona)}</td><td class="obs">${esc(f.obs)}${f.tripulacion?`<br>Trip.: ${esc(f.tripulacion)}`:''}${(nInt(f.ciclos)||rescatados(f))?`<div class="chips">${nInt(f.ciclos)?`<span class="chip">Grúa ${nInt(f.ciclos)}</span>`:''}${nInt(f.heridos)?`<span class="chip">${nInt(f.heridos)} herido${nInt(f.heridos)>1?'s':''}</span>`:''}${nInt(f.fallecidos)?`<span class="chip">${nInt(f.fallecidos)} fallecido${nInt(f.fallecidos)>1?'s':''}</span>`:''}</div>`:''}</td><td style="white-space:nowrap"><button class="small" data-act="edit" data-id="${f.id}">Editar</button> <button class="small danger" data-act="del" data-id="${f.id}">Borrar</button></td></tr>`).join('')||'<tr><td colspan="10" class="hint">No hay vuelos que coincidan.</td></tr>'}
-    </tbody></table></div></section>`;
+  ${S.demo?`<div class="banner"><b>Datos de ejemplo.</b> Desaparecen al añadir tu primer vuelo o al conectar tu hoja.</div>`:''}
+  <div class="search"><input id="q" type="search" placeholder="Buscar por zona, tripulación, clave…" value="${esc(V.q)}" aria-label="Buscar vuelos"></div>
+  <div class="chipsrow">${V.fm?`<button type="button" class="chipb on" data-act="f-month" data-v="" style="text-transform:capitalize">${monName(V.fm)} ✕</button>`:''}${chip('f-type','','Todas',!V.ft)}${types().map(t=>chip('f-type',t,t,V.ft===t)).join('')}${years.length>1?years.map(y=>chip('f-year',y,y,V.fy===y)).join(''):''}</div>
+  <div class="hint" style="padding:0 4px">${plural(list.length,'vuelo')}${list.length!==S.flights.length?` de ${S.flights.length}`:''}, ${hm(sum(list,f=>f.min))} h</div>
+  ${groups.map(g=>`<div class="mon"><h3>${monName(g.k)}</h3><span>${plural(g.a.length,'vuelo')} · ${hm(sum(g.a,f=>f.min))} h</span></div><div class="list">${g.a.map(flightCard).join('')}</div>`).join('')
+    ||`<div class="empty">${S.flights.length?'Ningún vuelo coincide con la búsqueda.':'Todavía no hay vuelos. Pulsa + para anotar el primero.'}</div>`}`;
 }
 
 function viewAnadir(){
   const f=editingId?S.flights.find(x=>x.id===editingId):null;
-  const last=[...S.flights].sort((a,b)=>b.date.localeCompare(a.date))[0]||{};
-  const lastReal=[...S.flights].filter(x=>!isSim(x)).sort((a,b)=>b.date.localeCompare(a.date))[0]||last;
-  const v=f||{date:todayISO(),tipo:lastReal.tipo||'',matricula:lastReal.matricula||'',rol:lastReal.rol||'SIC',mision:'',min:0,vuelo:lastReal.vuelo||'VFR',tripulacion:'',zona:'',obs:'',ciclos:0,heridos:0,fallecidos:0};
-  const uniq=k=>[...new Set(S.flights.map(x=>x[k]).filter(Boolean))].sort();
+  const byDate=[...S.flights].sort((a,b)=>b.date.localeCompare(a.date));
+  const lastReal=byDate.find(x=>!isSim(x))||byDate[0]||{};
+  const v=f||{date:todayISO(),tipo:lastReal.tipo||'',matricula:lastReal.matricula||'',rol:lastReal.rol||'SIC',mision:'',min:0,vuelo:'VFR',tripulacion:'',zona:'',obs:'',ciclos:0,heridos:0,fallecidos:0};
+  const uniq=k=>[...new Set(byDate.map(x=>x[k]).filter(Boolean))];
   const dlist=(id,arr)=>`<datalist id="${id}">${arr.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
+  const quick=(target,arr,cur)=>arr.length?`<div class="quick">${arr.map(x=>`<button type="button" class="chipb${x===cur?' on':''}" data-set="${target}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:'';
+  const seg=(target,arr,cur)=>`<div class="seg">${arr.map(x=>`<button type="button" class="${x===cur?'on':''}" data-set="${target}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div><input type="hidden" id="${target}" value="${esc(cur)}">`;
+  const step=(id,val)=>`<div class="step"><button type="button" data-step="-1" data-for="${id}" aria-label="Menos">−</button><input id="${id}" type="number" min="0" inputmode="numeric" value="${nInt(val)||''}" placeholder="0"><button type="button" data-step="1" data-for="${id}" aria-label="Más">+</button></div>`;
+  const cnt={}; S.flights.forEach(x=>{ const k=String(x.mision||'').toUpperCase(); if(k) cnt[k]=(cnt[k]||0)+1; });
+  const topMis=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,7);
+  const tiposQ=[...new Set([...types(),...(S.demo||!S.flights.length?TYPE_ORDER.slice(1):[])])];
+  const roles=[...new Set([...ROLES,v.rol].filter(Boolean))];
   return `
-  <section class="panel"><header><h2>${f?'Editar vuelo':'Añadir vuelo'}</h2><span class="hint">Horas en formato H:MM (por ejemplo 1:25)</span></header>
+  <section class="card"><header><h2>${f?'Editar vuelo':'Añadir vuelo'}</h2></header>
     <form id="flightform" class="grid" novalidate>
-      <div class="fld"><label for="f-date">Fecha</label><input id="f-date" type="date" value="${esc(v.date)}" required></div>
-      <div class="fld"><label for="f-tipo">Aeronave</label><input id="f-tipo" list="dl-tipo" value="${esc(v.tipo)}" autocomplete="off" placeholder="H135 P3H"></div>
-      <div class="fld"><label for="f-mat">Matrícula</label><input id="f-mat" list="dl-mat" value="${esc(v.matricula)}" inputmode="numeric" autocomplete="off"></div>
-      <div class="fld"><label for="f-rol">Rol</label><select id="f-rol">${[...new Set([...ROLES,v.rol].filter(Boolean))].map(r=>`<option${r===v.rol?' selected':''}>${esc(r)}</option>`).join('')}</select></div>
-      <div class="fld"><label for="f-mision">Clave de servicio</label><input id="f-mision" list="dl-mis" value="${esc(v.mision)}" autocomplete="off" placeholder="VO, RE, SIMULADOR..."><span class="misdesc" id="f-misdesc">${claveDesc(v.mision)?'('+esc(claveDesc(v.mision))+')':''}</span></div>
-      <div class="fld"><label for="f-horas">Horas</label><input id="f-horas" value="${v.min?hm(v.min):''}" inputmode="text" autocomplete="off" placeholder="1:25"></div>
-      <div class="fld"><label for="f-vuelo">Reglas de vuelo</label><select id="f-vuelo"><option${v.vuelo==='VFR'?' selected':''}>VFR</option><option${v.vuelo==='IFR'?' selected':''}>IFR</option></select></div>
-      <div class="fld w3"><label for="f-trip">Tripulación</label><input id="f-trip" list="dl-trip" value="${esc(v.tripulacion)}" autocomplete="off"></div>
-      <div class="fld w3"><label for="f-zona">Zona - aeródromo</label><input id="f-zona" list="dl-zona" value="${esc(v.zona)}" autocomplete="off"></div>
-      <div class="fld"><label for="f-ciclos">Ciclos de grúa</label><input id="f-ciclos" type="number" min="0" inputmode="numeric" value="${nInt(v.ciclos)||''}" placeholder="0"></div>
-      <div class="fld"><label for="f-her">Heridos rescatados</label><input id="f-her" type="number" min="0" inputmode="numeric" value="${nInt(v.heridos)||''}" placeholder="0"></div>
-      <div class="fld"><label for="f-fal">Fallecidos rescatados</label><input id="f-fal" type="number" min="0" inputmode="numeric" value="${nInt(v.fallecidos)||''}" placeholder="0"></div>
-      <div class="fld w6"><label for="f-obs">Observaciones</label><textarea id="f-obs">${esc(v.obs)}</textarea></div>
-      <div class="fld w6"><div class="err" id="f-err"></div><div class="row"><button class="primary" type="submit" data-then="list">${f?'Guardar cambios':'Guardar vuelo'}</button>${f?'<button type="button" data-act="cancel-edit">Cancelar</button>':'<button type="submit" data-then="again">Guardar y añadir otro</button>'}</div></div>
+      <div class="fld h"><label for="f-date">Fecha</label><input id="f-date" type="date" value="${esc(v.date)}" required></div>
+      <div class="fld h"><label for="f-horas">Horas (H:MM)</label><input id="f-horas" value="${v.min?hm(v.min):''}" inputmode="text" autocomplete="off" placeholder="1:25" style="font:600 22px var(--display)"></div>
+      <div class="fld"><label for="f-tipo">Aeronave</label><input id="f-tipo" list="dl-tipo" value="${esc(v.tipo)}" autocomplete="off" placeholder="H135 P3H">${quick('f-tipo',tiposQ,v.tipo)}</div>
+      <div class="fld"><label for="f-mat">Matrícula</label><input id="f-mat" list="dl-mat" value="${esc(v.matricula)}" inputmode="numeric" autocomplete="off">${quick('f-mat',uniq('matricula').slice(0,6),v.matricula)}</div>
+      <div class="fld"><label for="f-mision">Clave de servicio</label><input id="f-mision" list="dl-mis" value="${esc(v.mision)}" autocomplete="off" autocapitalize="characters" placeholder="VO, RE, SIMULADOR…"><span class="misdesc" id="f-misdesc">${esc(claveDesc(v.mision))}</span>${quick('f-mision',[...new Set([...topMis,'SIMULADOR'])],String(v.mision).toUpperCase())}</div>
+      <div class="fld"><span class="lab">Rol</span>${seg('f-rol',roles,v.rol)}</div>
+      <div class="fld"><span class="lab">Reglas de vuelo</span>${seg('f-vuelo',['VFR','IFR'],v.vuelo==='IFR'?'IFR':'VFR')}</div>
+      <div class="fld"><label for="f-trip">Tripulación</label><input id="f-trip" list="dl-trip" value="${esc(v.tripulacion)}" autocomplete="off"></div>
+      <div class="fld"><label for="f-zona">Zona o aeródromo</label><input id="f-zona" list="dl-zona" value="${esc(v.zona)}" autocomplete="off"></div>
+      <div class="fld t"><label for="f-ciclos">Ciclos de grúa</label>${step('f-ciclos',v.ciclos)}</div>
+      <div class="fld t"><label for="f-her">Heridos</label>${step('f-her',v.heridos)}</div>
+      <div class="fld t"><label for="f-fal">Fallecidos</label>${step('f-fal',v.fallecidos)}</div>
+      <div class="fld"><label for="f-obs">Observaciones</label><textarea id="f-obs">${esc(v.obs)}</textarea></div>
+      <div class="fld"><div class="err" id="f-err" role="alert"></div><div class="row"><button class="primary" style="flex:1 1 100%" type="submit" data-then="list">${f?'Guardar cambios':'Guardar vuelo'}</button>${f?'<button type="button" class="wide" data-act="cancel-edit">Cancelar</button>':'<button type="submit" class="wide" data-then="again">Guardar y añadir otro</button>'}</div></div>
     </form>
     ${dlist('dl-tipo',[...new Set([...TYPE_ORDER,...uniq('tipo')])])}${dlist('dl-mat',uniq('matricula'))}<datalist id="dl-mis">${[...new Set(['SIMULADOR',...(S.claves||[]).map(c=>String(c.clave).toUpperCase()),...uniq('mision')])].map(k=>`<option value="${esc(k)}" label="${esc(claveDesc(k))}">`).join('')}</datalist>${dlist('dl-zona',uniq('zona'))}${dlist('dl-trip',uniq('tripulacion'))}
   </section>`;
 }
 
-function viewDatos(){
-  const sy=S.sync||{url:'',token:'',pendingOps:[]};
-  const connected=!!(sy.url&&sy.token);
-  const npend=(sy.pendingOps||[]).length;
+function viewPiloto(){
+  const today=todayISO(), cad=S.cad||[], cs=cimaState(today);
+  const form=sortForm(S.form||[]);
+  const tit=form.find(x=>x.tipo==='TÍTULO'&&x.fecha);
+  const lbl={ok:'En vigor',warn:'Renovar pronto',late:'Caducado'};
+  let cima;
+  if(cs&&!cs.none) cima=`<section class="card valid ${cs.st}"><header><h2>Reconocimiento médico CIMA</h2><span class="pill">${lbl[cs.st]}</span></header>
+      <div class="big">${cs.left<0?-cs.left:cs.left}<small>${cs.left<0?'días caducado':'días de validez'}</small></div>
+      <div class="life"><i style="width:${cs.pct.toFixed(1)}%"></i></div>
+      <div class="ends"><span>Pasado el ${fmtDate(cs.ultima)}</span><span>${cs.left<0?'Venció':'Vence'} el ${fmtDate(cs.vence)}</span></div>
+      <div class="row" style="margin-top:14px"><button class="small" data-act="cad-edit" data-c="${CIMA}">Cambiar fecha</button></div></section>`;
+  else if(cs) cima=`<section class="card valid warn"><header><h2>Reconocimiento médico CIMA</h2><span class="pill">Sin fecha</span></header><button class="small" data-act="cad-edit" data-c="${CIMA}">Poner fecha</button></section>`;
+  else cima=`<section class="card"><header><h2>Reconocimiento médico CIMA</h2></header><div class="hint">${syncConfigured()?'No aparece en la pestaña CADUCIDADES de tu hoja.':'Conecta tu hoja de Google en Datos para controlar la caducidad.'}</div></section>`;
+  const sims=S.flights.filter(isSim);
+  const kv=(n,iso,c)=>`<div class="kv"><div><div class="a">${esc(n)}</div><div class="b">${iso?`${fmtDate(iso)}, ${lapso(iso,today)}`:'sin fecha'}</div></div>${c?`<button class="small" data-act="cad-edit" data-c="${esc(c)}">Cambiar</button>`:''}</div>`;
+  const others=['Entrenamiento aeromédico (CIMA)','Supervivencia en el mar'].map(c=>{ const x=cad.find(y=>y.concepto===c); return x?kv(c.replace(' (CIMA)',''),x.ultima,c):''; }).join('')
+    +types().map(t=>({t,l:lastOf(sims.filter(f=>f.tipo===t))})).filter(x=>x.l).map(x=>kv('Simulador '+x.t,x.l,'')).join('');
   return `
-  <section class="panel"><header><h2>Conexión con Google Sheets</h2><span class="hint">${connected?'Conectado':'No conectado'}</span></header>
-    <p class="hint" style="margin-top:0">Pega aquí la URL de tu aplicación web de Apps Script (acaba en <code>/exec</code>) y la clave que puso en el script. A partir de ahí, los vuelos se leen y guardan directamente en tu Hoja de Google real.</p>
-    <div class="grid">
-      <div class="fld w4"><label for="sy-url">URL de la aplicación web</label><input id="sy-url" value="${esc(sy.url)}" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec"></div>
-      <div class="fld w2"><label for="sy-tok">Clave (token)</label><input id="sy-tok" type="password" value="${esc(sy.token)}" autocomplete="off"></div>
-    </div>
-    <div class="row">
-      <button class="primary" data-act="sync-connect">${connected?'Reconectar y traer vuelos':'Conectar y traer vuelos'}</button>
-      ${connected?'<button data-act="sync-now">Sincronizar ahora</button><button class="danger" data-act="sync-off">Desconectar</button>':''}
-    </div>
-    <div class="err" id="sy-err"></div>
-    ${npend?`<p class="hint">${npend} cambio(s) pendientes de subir (se reintentarán solos).</p>`:''}
-    ${connected?'<p class="hint">Mientras está conectado, cada vuelo que añadas, edites o borres aquí se guarda también en tu Hoja de Google.</p>':''}
-  </section>
-  <section class="panel"><header><h2>Importar</h2><span class="hint">Tu Excel (.xlsx), un CSV o una copia de seguridad (.json)</span></header>
-    <p class="hint" style="margin-top:0">El archivo se lee en este dispositivo y no se envía a ningún sitio. En un .xlsx se usa la hoja HORAS y las columnas FECHA, TIPO, MATRÍCULA, ROLL, MISIÓN, HORAS, VUELO, TRIPULACIÓN, ZONA-AERÓDROMO y OBSERVACIONES.</p>
-    <div class="row"><input id="file" type="file" accept=".xlsx,.csv,.json,.txt" style="max-width:420px"></div><div class="err" id="imp-err"></div></section>
-  <section class="panel"><header><h2>Copia de seguridad</h2><span class="hint">${S.flights.length} vuelos · ${S.rules.length} requisitos</span></header>
-    <p class="hint" style="margin-top:0">Tus datos se guardan solo en este navegador y este dispositivo. Si limpias los datos del navegador o cambias de móvil se pierden, así que guarda una copia de vez en cuando.</p>
-    <div class="row">
-      <button class="primary" data-act="save-json" ${dl&&dl.noDl?'disabled':''}>Guardar copia (.json)</button>
-      <button data-act="save-csv" ${dl&&dl.noDl?'disabled':''}>Exportar a Excel (.csv)</button>
-      <button data-act="copy-json">Copiar copia al portapapeles</button>
-    </div>
-    <p class="hint" id="dl-note">${dl&&dl.noDl?'Aquí no se pueden guardar archivos; usa "Copiar copia" y pégala en una nota.':''}</p>
-    <p class="hint">${storageOK?'Guardado automático en este navegador: activo.':'<b style="color:var(--late)">El guardado automático no está disponible aquí.</b>'}</p></section>
-  <section class="panel"><header><h2>Borrar todo</h2></header><button class="danger" data-act="wipe">Borrar todos mis datos</button></section>`;
+  ${cima}
+  <section class="card"><header><h2>Última vez</h2><span class="hint">informativo, sin avisos</span></header>
+    ${others||'<div class="hint">Sin datos.</div>'}</section>
+  <section class="card"><header><h2>Título y habilitaciones</h2></header>${tit?`<p class="hint" style="margin:-6px 0 16px">Piloto desde el ${fmtDate(tit.fecha)}, ${lapso(tit.fecha,today)}.</p>`:''}
+    ${form.length?`<ol class="tl">${form.map((x,i)=>`<li class="${x.tipo==='TÍTULO'?'tit':''}">
+      <div class="when">${x.fecha?fmtDate(x.fecha):'sin fecha'}${x.fecha?`<small>${lapso(x.fecha,today)}</small>`:''}</div>
+      <div class="what">${esc(x.nombre)}</div>
+      <div class="kind">${esc(x.tipo==='TÍTULO'?'Título':x.tipo==='HABILITACIÓN'?'Habilitación de tipo':'Curso')}</div>
+      ${x.detalle?`<div class="det">${esc(x.detalle)}</div>`:''}
+      <button class="small" data-act="form-edit" data-i="${i}">Editar</button></li>`).join('')}</ol>`
+      :'<div class="hint">Anota aquí tu título de piloto y las habilitaciones de tipo, con su fecha.</div>'}
+    <div class="row" style="margin-top:16px"><button data-act="form-edit" data-i="-1">Añadir título, habilitación o curso</button></div>
+    <p class="hint" style="margin-bottom:0">Las horas de los cursos se guardan como dato de formación y no se suman a tus horas de vuelo.</p>
+  </section>`;
 }
 
-/* ---------- routing / render ---------- */
-const VIEWS={resumen:viewResumen,vigencias:viewVigencias,vuelos:viewVuelos,anadir:viewAnadir,datos:viewDatos};
-function tab(){ const h=location.hash.slice(1); return VIEWS[h]?h:'resumen'; }
+function viewDatos(){
+  const sy=S.sync||{url:'',token:''}, connected=syncConfigured(), np=pend().length, th=S.theme||'auto';
+  return `
+  <section class="card"><header><h2>Tu hoja de Google</h2><span class="hint">${connected?'Conectada':'Sin conectar'}</span></header>
+    ${connected?`<p style="margin-top:0">Cada vuelo que añadas, edites o borres se guarda en tu hoja «Libro de vuelo». Sin cobertura se guarda en el móvil y sube al recuperarla.</p>
+      ${np?`<p class="hint">${plural(np,'cambio')} pendiente${np>1?'s':''} de subir.</p>`:''}
+      <p class="hint">Última sincronización: ${sy.lastOk?new Date(sy.lastOk).toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'}):'todavía ninguna'}</p>
+      <div class="row"><button class="primary" data-act="sync-now">Sincronizar ahora</button><button class="danger" data-act="sync-off">Desconectar</button></div>`
+    :`<p class="hint" style="margin-top:0">Abre tu enlace de conexión en este dispositivo, o pega aquí la dirección de la aplicación web (acaba en <code>/exec</code>) y tu clave.</p>
+      <div class="grid"><div class="fld"><label for="sy-url">Dirección de la aplicación web</label><input id="sy-url" value="${esc(sy.url)}" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec"></div>
+      <div class="fld"><label for="sy-tok">Clave</label><input id="sy-tok" type="password" value="${esc(sy.token)}" autocomplete="off"></div></div>
+      <div class="row" style="margin-top:12px"><button class="primary" data-act="sync-connect">Conectar y traer mis vuelos</button></div>`}
+    <div class="err" id="sy-err" role="alert"></div>
+  </section>
+  <section class="card"><header><h2>Apariencia</h2></header>
+    <div class="seg">${[['auto','Automática'],['light','Clara'],['dark','Oscura']].map(([k,l])=>`<button type="button" class="${th===k?'on':''}" data-act="theme" data-v="${k}">${l}</button>`).join('')}</div>
+  </section>
+  <section class="card"><header><h2>Copia de seguridad</h2><span class="hint">${plural(S.flights.length,'vuelo')}</span></header>
+    <div class="row">
+      <button data-act="save-csv" ${noDl?'disabled':''}>Exportar a Excel (.csv)</button>
+      <button data-act="save-json" ${noDl?'disabled':''}>Guardar copia (.json)</button>
+      <button data-act="copy-json">Copiar al portapapeles</button>
+    </div></section>
+  ${connected?'':`<section class="card"><header><h2>Importar</h2></header>
+    <p class="hint" style="margin-top:0">Un Excel (.xlsx) con la hoja HORAS, un CSV o una copia (.json). El archivo se lee en este dispositivo y no se envía a ningún sitio.</p>
+    <input id="file" type="file" accept=".xlsx,.csv,.json,.txt"><div class="err" id="imp-err" role="alert"></div></section>`}
+  <section class="card"><header><h2>Borrar los datos de este dispositivo</h2></header>
+    <p class="hint" style="margin-top:0">${connected?'Desconecta la app y borra lo guardado en este dispositivo. Tu hoja de Google no se toca.':'Elimina todos los vuelos guardados en este navegador.'}</p>
+    <button class="danger" data-act="wipe">Borrar datos de este dispositivo</button></section>
+  <p class="hint" style="text-align:center;margin:0">Logbook ${VER}${storageOK?'':' · sin guardado local'}</p>`;
+}
+
+/* ---------- navegación ---------- */
+const VIEWS={resumen:viewResumen,piloto:viewPiloto,vuelos:viewVuelos,anadir:viewAnadir,datos:viewDatos};
+function tab(){ let h=location.hash.slice(1); if(h==='vigencias') h='piloto'; return VIEWS[h]?h:'resumen'; }
 function render(){
   const t=tab();
   document.querySelectorAll('#nav a').forEach(a=>{ if(a.dataset.tab===t) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
   $('#app').innerHTML=VIEWS[t]();
-  updateSyncPill();
-  if(t!=='anadir'&&editingId&&t!=='vigencias') editingId=null;
+  updateSync();
 }
-window.addEventListener('hashchange',()=>{ if(tab()!=='anadir') editingId=null; if(tab()!=='vigencias') editingRule=null; render(); window.scrollTo(0,0); });
+window.addEventListener('hashchange',()=>{ if(/^#conectar=/.test(location.hash)) return; if(tab()!=='anadir') editingId=null; render(); window.scrollTo(0,0); });
 
-/* ---------- events ---------- */
+/* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
-  if(e.target.id==='f-mision'){ const d=claveDesc(e.target.value); const el=$('#f-misdesc'); if(el) el.textContent=d?'('+d+')':''; return; }
-  if(e.target.id==='q'||e.target.id==='ft'){
-    dl=Object.assign(dl||{},{q:$('#q').value,ft:$('#ft').value});
-    const pos=e.target.selectionStart, id=e.target.id; render(); const el=$('#'+id); el.focus(); try{el.setSelectionRange(pos,pos);}catch(_){}
-  }
+  const id=e.target.id;
+  if(id==='f-mision'){ const el=$('#f-misdesc'); if(el) el.textContent=claveDesc(e.target.value); markQuick('f-mision',e.target.value.toUpperCase()); return; }
+  if(id==='f-tipo'||id==='f-mat'){ markQuick(id,e.target.value); return; }
+  if(id==='q'){ V.q=e.target.value; const pos=e.target.selectionStart; render(); const el=$('#q'); el.focus(); try{ el.setSelectionRange(pos,pos); }catch(_){} }
 });
-document.addEventListener('change',e=>{
-  if(e.target.id==='r-kind'){
-    const h=e.target.value==='hours';
-    document.querySelectorAll('.hrs').forEach(x=>x.classList.toggle('rulehide',!h));
-  }
-  if(e.target.id==='file'&&e.target.files[0]) onFile(e.target.files[0]);
-});
+document.addEventListener('change',e=>{ if(e.target.id==='file'&&e.target.files[0]) onFile(e.target.files[0]); });
+function markQuick(target,val){ document.querySelectorAll(`[data-set="${target}"]`).forEach(b=>b.classList.toggle('on',b.dataset.v===val)); }
 let submitter=null;
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closeModal();
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('article.fl')){ e.preventDefault(); e.target.click(); }
+});
 document.addEventListener('click',async e=>{
-  const b=e.target.closest('button'); if(!b) return;
-  if(b.type==='submit') submitter=b.dataset.then||'list';
-  const act=b.dataset.act; if(!act) return;
-  const id=b.dataset.id;
-  if(act==='edit'){ editingId=id; location.hash='anadir'; if(tab()==='anadir') render(); }
+  const st=e.target.closest('[data-step]');
+  if(st){ const inp=$('#'+st.dataset.for); inp.value=Math.max(0,nInt(inp.value)+(+st.dataset.step))||''; return; }
+  const qs=e.target.closest('[data-set]');
+  if(qs){ const inp=$('#'+qs.dataset.set); inp.value=qs.dataset.v; markQuick(qs.dataset.set,qs.dataset.v); if(qs.dataset.set==='f-mision'){ const el=$('#f-misdesc'); if(el) el.textContent=claveDesc(qs.dataset.v); } return; }
+  const sb=e.target.closest('button[type=submit]'); if(sb) submitter=sb.dataset.then||'list';
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const act=b.dataset.act, id=b.dataset.id;
+  if(act==='fl-open'){ if(e.target.closest('.more')) return; V.open=V.open===id?null:id; render(); }
+  else if(act==='pick-month'){ V.mon=b.dataset.k; render(); }
+  else if(act==='see-month'){ V.fm=b.dataset.k; V.ft=''; V.fy=''; V.q=''; }
+  else if(act==='f-type'){ V.ft=b.dataset.v; render(); }
+  else if(act==='f-year'){ V.fy=V.fy===b.dataset.v?'':b.dataset.v; render(); }
+  else if(act==='f-month'){ V.fm=''; render(); }
+  else if(act==='sync-info'){ if(!syncConfigured()) location.hash='datos'; else if(b.dataset.tip) toast(b.dataset.tip); if(syncConfigured()&&!net.busy&&navigator.onLine&&(pend().length||net.err)) syncAll(); }
+  else if(act==='theme'){ S.theme=b.dataset.v; save(); applyTheme(); render(); }
+  else if(act==='edit'){ editingId=id; if(tab()==='anadir') render(); else location.hash='anadir'; }
   else if(act==='cancel-edit'){ editingId=null; location.hash='vuelos'; }
-  else if(act==='del'){ pending=id; const f=S.flights.find(x=>x.id===id); modal(`<h3>Borrar vuelo</h3><div>${fmtDate(f.date)} · ${esc(f.tipo)} · ${esc(f.mision)} · ${hm(f.min)} h</div><div class="row"><button class="danger" data-act="del-ok">Borrar</button><button data-act="modal-x">Cancelar</button></div>`); }
+  else if(act==='del'){ pending=id; const f=S.flights.find(x=>x.id===id); modal(`<h2>¿Borrar este vuelo?</h2><div>${fmtDate(f.date)}, ${esc(f.tipo)}, ${esc(f.mision)}, ${hm(f.min)} h</div><div class="row"><button class="danger wide" data-act="del-ok">Borrar vuelo</button><button data-act="modal-x">Cancelar</button></div>`); }
   else if(act==='del-ok'){
-    const f=S.flights.find(x=>x.id===pending);
-    S.flights=S.flights.filter(x=>x.id!==pending);
+    const f=S.flights.find(x=>x.id===pending); if(!f){ closeModal(); return; }
+    S.flights=S.flights.filter(x=>x.id!==f.id);
+    S.sync.pendingOps=pend().filter(o=>o.localId!==f.id);
     save(); closeModal(); render(); toast('Vuelo borrado');
-    if(f&&syncConfigured()){
-      if(f.rowId){
-        try{ await apiPost('delete',{rowId:f.rowId,fecha:f.date}); await syncPullAll(); render(); }
-        catch(e){
-          if(e.server){ toast('La hoja no aceptó el borrado: '+e.message); try{ await syncPullAll(); render(); }catch(_){} }
-          else queuePending('delete',null,f.rowId,f.date);
-        }
+    if(syncConfigured()&&f.rowId){
+      const opId=uid();
+      try{ await apiPost('delete',{rowId:f.rowId,fecha:f.date,ref:f.ref||undefined},opId); await syncAll(); }
+      catch(ex){
+        if(ex.server){ toast('Tu hoja no aceptó el borrado: '+ex.message); await syncAll(); }
+        else queuePending({op:'delete',rowId:f.rowId,fecha:f.date,ref:f.ref||'',opId});
       }
     }
   }
   else if(act==='modal-x') closeModal();
-  else if(act==='rule-edit'){ editingRule=S.rules.find(x=>x.id===id); render(); window.scrollTo(0,document.body.scrollHeight); }
-  else if(act==='rule-cancel'){ editingRule=null; render(); }
-  else if(act==='rule-del'){ S.rules=S.rules.filter(x=>x.id!==id); save(); render(); toast('Requisito borrado'); }
-  else if(act==='save-json') saveFile('libro-de-vuelo.json',JSON.stringify({version:1,flights:S.flights,rules:S.rules},null,1));
+  else if(act==='save-json') saveFile('libro-de-vuelo.json',JSON.stringify({version:2,flights:S.flights,form:S.form||[]},null,1));
   else if(act==='save-csv') saveFile('libro-de-vuelo.csv',toCSV());
-  else if(act==='copy-json') copyText(JSON.stringify({version:1,flights:S.flights,rules:S.rules}));
-  else if(act==='wipe'){ modal(`<h3>Borrar todos los datos</h3><div>Se eliminarán todos tus vuelos y requisitos de este navegador. No se puede deshacer.</div><div class="row"><button class="danger" data-act="wipe-ok">Borrar todo</button><button data-act="modal-x">Cancelar</button></div>`); }
-  else if(act==='wipe-ok'){ S={flights:[],rules:[],demo:false,sync:{url:'',token:'',pendingOps:[]}}; save(); closeModal(); render(); toast('Datos borrados'); }
+  else if(act==='copy-json') copyText(JSON.stringify({version:2,flights:S.flights,form:S.form||[]}));
+  else if(act==='wipe'){ modal(`<h2>¿Borrar los datos de este dispositivo?</h2><div>${syncConfigured()?'La app se desconecta y se vacía. Tu hoja de Google conserva todos los vuelos; podrás volver a conectar con tu enlace.':'Se eliminan todos los vuelos guardados en este navegador. No se puede deshacer.'}</div>${pend().length?`<div class="banner late">Hay ${plural(pend().length,'cambio')} sin subir a tu hoja que se perderá${pend().length>1?'n':''}.</div>`:''}<div class="row"><button class="danger wide" data-act="wipe-ok">Borrar datos</button><button data-act="modal-x">Cancelar</button></div>`); }
+  else if(act==='wipe-ok'){ S={flights:[],rules:[],demo:false,sync:{url:'',token:'',pendingOps:[]},claves:[],cad:[],form:[],theme:S.theme}; net.err=''; save(); closeModal(); render(); toast('Datos borrados de este dispositivo'); }
   else if(act==='sync-connect'){
     const url=($('#sy-url')||{}).value?.trim(), tok=($('#sy-tok')||{}).value?.trim();
     const errEl=$('#sy-err');
-    if(!url||!tok){ if(errEl) errEl.textContent='Completa la URL y la clave.'; return; }
-    if(errEl) errEl.textContent='Conectando…';
-    try{ await connectSync(url,tok); render(); toast('Conectado. Vuelos sincronizados.'); }
-    catch(ex){ const e2=$('#sy-err'); if(e2) e2.textContent='No se pudo conectar: '+ex.message; }
+    if(!url||!tok){ errEl.textContent='Completa la dirección y la clave.'; return; }
+    if(!/^https:\/\//.test(url)){ errEl.textContent='La dirección debe empezar por https://'; return; }
+    errEl.textContent='Conectando…';
+    try{ await connectSync(url,tok); render(); toast(`Conectado: ${plural(S.flights.length,'vuelo')}`); }
+    catch(ex){ render(); const e2=$('#sy-err'); if(e2) e2.textContent='No se pudo conectar: '+ex.message; }
   }
-  else if(act==='sync-now'){
-    const errEl=$('#sy-err');
-    try{ await drainPending(); await syncPullAll(); render(); toast('Sincronizado'); }
-    catch(ex){ if(errEl) errEl.textContent='No se pudo sincronizar: '+ex.message; }
-  }
+  else if(act==='sync-now'){ await syncAll(true); toast(net.err?'No se pudo sincronizar: '+net.err:navigator.onLine?'Sincronizado':'Sin conexión'); }
+  else if(act==='sync-off'){ if(pend().length){ modal(`<h2>Hay cambios sin subir</h2><div>Si desconectas ahora, ${plural(pend().length,'cambio')} no llegará${pend().length>1?'n':''} a tu hoja.</div><div class="row"><button class="danger wide" data-act="sync-off-ok">Desconectar igualmente</button><button data-act="modal-x">Cancelar</button></div>`); } else { disconnectSync(); render(); toast('Desconectado de tu hoja'); } }
+  else if(act==='sync-off-ok'){ disconnectSync(); closeModal(); render(); toast('Desconectado de tu hoja'); }
   else if(act==='cad-edit'){
     const c=b.dataset.c; const x=(S.cad||[]).find(y=>y.concepto===c)||{};
     pending=c;
-    modal(`<h3>${esc(c)}</h3><label for="cad-d">Fecha de la última vez</label><input id="cad-d" type="date" value="${esc(x.ultima||todayISO())}"><div class="err" id="cad-err"></div><div class="row"><button class="primary" data-act="cad-ok">Guardar</button><button data-act="modal-x">Cancelar</button></div>`);
+    modal(`<h2>${esc(c)}</h2><div class="fld"><label for="cad-d">Fecha de la última vez</label><input id="cad-d" type="date" value="${esc(x.ultima||todayISO())}" max="${todayISO()}"></div><div class="err" id="cad-err" role="alert"></div><div class="row"><button class="primary wide" data-act="cad-ok">Guardar fecha</button><button data-act="modal-x">Cancelar</button></div>`);
   }
   else if(act==='cad-ok'){
-    const c=pending, d=($('#cad-d')||{}).value;
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(d||'')){ $('#cad-err').textContent='Pon una fecha.'; return; }
-    if(!syncConfigured()){ $('#cad-err').textContent='Conecta tu Hoja de Google para guardar esta fecha.'; return; }
-    $('#cad-err').textContent='Guardando…';
-    try{ const r=await apiPost('setCaducidad',{concepto:c,fecha:d}); S.cad=r.caducidades||S.cad; save(); closeModal(); render(); toast('Fecha guardada en tu hoja'); }
-    catch(ex){ const e2=$('#cad-err'); if(e2) e2.textContent='No se pudo guardar: '+ex.message; }
+    const c=pending, d=($('#cad-d')||{}).value, er=m=>{ const el=$('#cad-err'); if(el) el.textContent=m; };
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d||'')) return er('Pon una fecha.');
+    if(!syncConfigured()) return er('Conecta tu hoja de Google para guardar esta fecha.');
+    er('Guardando…');
+    try{ const r=await apiPost('setCaducidad',{concepto:c,fecha:d}); S.cad=r.caducidades||S.cad; save(); closeModal(); render(); toast('Fecha guardada'); }
+    catch(ex){ er(ex.server?'Tu hoja no aceptó la fecha: '+ex.message:'Sin conexión. Inténtalo cuando tengas cobertura.'); }
   }
-  else if(act==='sync-off'){ disconnectSync(); render(); toast('Desconectado de Google Sheets'); }
+  else if(act==='form-edit'){
+    const i=+b.dataset.i, list=sortForm(S.form||[]), x=i>=0?list[i]:{tipo:'HABILITACIÓN',nombre:'',fecha:'',aeronave:'',detalle:''};
+    V.fi=i;
+    const aer=[...new Set([...TYPE_ORDER.slice(1),...types(),x.aeronave].filter(Boolean))];
+    modal(`<h2>${i>=0?'Editar':'Añadir'}</h2>
+      <div class="fld"><span class="lab">Tipo</span><div class="seg">${FORM_TIPOS.map(t=>`<button type="button" class="${t===x.tipo?'on':''}" data-set="fm-tipo" data-v="${t}">${t[0]+t.slice(1).toLowerCase()}</button>`).join('')}</div><input type="hidden" id="fm-tipo" value="${esc(x.tipo)}"></div>
+      <div class="fld"><label for="fm-nombre">Nombre</label><input id="fm-nombre" value="${esc(x.nombre)}" autocomplete="off" placeholder="H135 P3H, curso…"></div>
+      <div class="grid"><div class="fld h"><label for="fm-fecha">Fecha</label><input id="fm-fecha" type="date" value="${esc(x.fecha)}"></div>
+      <div class="fld h"><label for="fm-aero">Aeronave (si es habilitación)</label><select id="fm-aero"><option value="">Ninguna</option>${aer.map(t=>`<option${t===x.aeronave?' selected':''}>${esc(t)}</option>`).join('')}</select></div></div>
+      <div class="fld"><label for="fm-det">Detalle</label><textarea id="fm-det" rows="4">${esc(x.detalle)}</textarea></div>
+      <div class="err" id="fm-err" role="alert"></div>
+      <div class="row"><button class="primary wide" data-act="form-ok">Guardar</button>${i>=0?'<button class="danger" data-act="form-del">Borrar</button>':''}<button data-act="modal-x">Cancelar</button></div>`);
+  }
+  else if(act==='form-ok'||act==='form-del'){
+    const list=sortForm(S.form||[]);
+    if(act==='form-del') list.splice(V.fi,1);
+    else{
+      const rec={tipo:$('#fm-tipo').value,nombre:$('#fm-nombre').value.trim(),fecha:$('#fm-fecha').value,aeronave:$('#fm-aero').value,detalle:$('#fm-det').value.trim()};
+      if(!rec.nombre){ $('#fm-err').textContent='Escribe el nombre.'; return; }
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(rec.fecha)){ $('#fm-err').textContent='Pon la fecha.'; return; }
+      if(V.fi>=0) list[V.fi]=rec; else list.push(rec);
+    }
+    S.form=sortForm(list); save(); closeModal(); render(); toast(act==='form-del'?'Borrado':'Guardado');
+    if(syncConfigured()){
+      const opId=uid();
+      try{ const r=await apiPost('setFormacion',{items:S.form},opId); if(Array.isArray(r.formacion)){ S.form=sortForm(r.formacion); save(); } }
+      catch(ex){ if(ex.server) toast('Tu hoja no aceptó el cambio: '+ex.message); else queuePending({op:'form',opId}); }
+    }
+  }
   else if(act==='imp-replace'||act==='imp-add'){
     const inc=pending.flights;
-    if(act==='imp-replace'||S.demo){ S.flights=[]; if(S.demo) leaveDemo(); }
+    if(act==='imp-replace'||S.demo){ S.flights=[]; leaveDemo(); }
     const key=f=>[f.date,f.tipo,f.matricula,f.rol,f.mision,f.min,f.vuelo,f.zona,f.obs].join('|');
     const have=new Set(S.flights.map(key)); let added=0;
-    inc.forEach(f=>{ if(act==='imp-replace'||!have.has(key(f))){ S.flights.push(f); have.add(key(f)); added++; } });
-    if(pending.rules&&pending.rules.length&&act==='imp-replace') S.rules=pending.rules;
-    S.demo=false; save(); closeModal(); location.hash='resumen'; render(); toast(`${added} vuelos importados`);
+    inc.forEach(f=>{ if(!have.has(key(f))){ S.flights.push(f); have.add(key(f)); added++; } });
+    if(Array.isArray(pending.form)&&pending.form.length&&!(S.form||[]).length) S.form=sortForm(pending.form);
+    S.demo=false; save(); closeModal(); location.hash='resumen'; render(); toast(`${plural(added,'vuelo')} importado${added===1?'':'s'}`);
   }
 });
 $('#modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 
-document.addEventListener('submit',e=>{
-  e.preventDefault();
-  if(e.target.id==='flightform') onFlightSubmit();
-  else if(e.target.id==='ruleform') onRuleSubmit();
-});
+document.addEventListener('submit',e=>{ e.preventDefault(); if(e.target.id==='flightform') onFlightSubmit(); });
 async function onFlightSubmit(){
   const g=id=>$('#'+id).value.trim(), err=m=>{ $('#f-err').textContent=m; };
   const date=g('f-date'), min=parseHM(g('f-horas'));
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err('Indica la fecha.');
-  if(!g('f-tipo')) return err('Indica la aeronave.');
-  if(!g('f-mision')) return err('Indica la clave de servicio (o SIMULADOR).');
-  if(!(min>=0)) return err('Las horas deben tener formato H:MM, por ejemplo 1:25.');
-  const rec={date,tipo:g('f-tipo'),matricula:g('f-mat'),rol:$('#f-rol').value,mision:g('f-mision').toUpperCase(),min,vuelo:$('#f-vuelo').value,tripulacion:g('f-trip'),zona:g('f-zona'),obs:g('f-obs'),ciclos:nInt(g('f-ciclos')),heridos:nInt(g('f-her')),fallecidos:nInt(g('f-fal'))};
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err('Pon la fecha.');
+  if(!(min>=0)) return err('Escribe las horas como H:MM, por ejemplo 1:25.');
+  if(!g('f-tipo')) return err('Elige la aeronave.');
+  if(!g('f-mision')) return err('Elige la clave de servicio (o SIMULADOR).');
+  const rec={date,tipo:g('f-tipo'),matricula:g('f-mat'),rol:g('f-rol'),mision:g('f-mision').toUpperCase(),min,vuelo:g('f-vuelo'),tripulacion:g('f-trip'),zona:g('f-zona'),obs:g('f-obs'),ciclos:nInt(g('f-ciclos')),heridos:nInt(g('f-her')),fallecidos:nInt(g('f-fal'))};
   let f, wasEdit=false;
-  if(editingId){ const i=S.flights.findIndex(x=>x.id===editingId); S.flights[i]=Object.assign({},S.flights[i],rec); f=S.flights[i]; wasEdit=true; editingId=null; }
+  if(editingId){ const i=S.flights.findIndex(x=>x.id===editingId); if(i<0){ editingId=null; return err('Ese vuelo ya no existe. Vuelve a la lista.'); } S.flights[i]=Object.assign({},S.flights[i],rec); f=S.flights[i]; wasEdit=true; editingId=null; }
   else { leaveDemo(); f=Object.assign({id:uid()},rec); S.flights.push(f); }
-  save(); toast('Vuelo guardado');
-  const then=submitter;
-  if(then==='again'){ render(); $('#f-horas').focus(); } else location.hash='vuelos';
+  save(); toast(wasEdit?'Cambios guardados':'Vuelo guardado');
+  V.open=null;
+  if(submitter==='again'&&!wasEdit){ render(); window.scrollTo(0,0); const h=$('#f-horas'); if(h) h.focus(); } else location.hash='vuelos';
   if(syncConfigured()){
+    if(pend().some(o=>o.localId===f.id)) return;       // ya está en cola: subirá con los datos nuevos
+    const opId=uid();
     try{
-      const res=await apiPost((wasEdit&&f.rowId)?'update':'add',localToRemote(f));
-      if(res.flight&&res.flight.rowId){ f.rowId=res.flight.rowId; save(); }
+      const res=await apiPost(f.rowId?'update':'add',localToRemote(f),opId);
+      if(res.flight){ f.rowId=res.flight.rowId||f.rowId; f.ref=res.flight.ref||''; save(); }
+      if(!typing()) render();
     }catch(ex){
-      if(ex.server){ toast('La hoja no aceptó el cambio: '+ex.message); try{ await syncPullAll(); render(); }catch(_){} }
-      else queuePending(wasEdit?'update':'add',f.id);
+      if(ex.server){ toast('Tu hoja no aceptó el cambio: '+ex.message); await syncAll(); }
+      else queuePending({op:f.rowId?'update':'add',localId:f.id,opId});
     }
   }
 }
-function onRuleSubmit(){
-  const g=id=>$('#'+id).value.trim(), err=m=>{ $('#r-err').textContent=m; };
-  const kind=g('r-kind'), days=parseInt(g('r-days'),10), hours=parseFloat(g('r-hours').replace(',','.')), cal=g('r-cal')==='1';
-  if(!g('r-name')) return err('Ponle un nombre al requisito.');
-  if(!(days>0)&&!(kind==='hours'&&cal)) return err('Indica un número de días mayor que 0.');
-  if(kind==='hours'&&!(hours>0)) return err('Indica las horas mínimas.');
-  const rec={name:g('r-name'),kind,tipo:g('r-tipo'),source:g('r-source'),days:days||365,hours:kind==='hours'?hours:0,calYear:kind==='hours'&&cal,warn:Math.max(0,parseInt(g('r-warn'),10)||0)};
-  if(editingRule&&editingRule.id){ const i=S.rules.findIndex(x=>x.id===editingRule.id); S.rules[i]=Object.assign({},S.rules[i],rec,{demo:false}); }
-  else S.rules.push(Object.assign({id:uid()},rec));
-  editingRule=null; save(); render(); toast('Requisito guardado');
-}
 
-/* ---------- import / export ---------- */
+/* ---------- importar / exportar ---------- */
 async function onFile(file){
   const err=m=>{ const el=$('#imp-err'); if(el) el.textContent=m; };
   err('');
@@ -793,15 +1013,15 @@ async function onFile(file){
     if(name.endsWith('.xlsx')){ const x=await readXlsx(await file.arrayBuffer()); res=tableToFlights(x.header,x.rows); res.note=`Hoja «${x.sheet}»`; }
     else if(name.endsWith('.json')){
       const o=JSON.parse(await file.text());
-      if(!o||!Array.isArray(o.flights)) throw new Error('El JSON no es una copia de este libro de vuelo.');
-      res={flights:o.flights.map(f=>Object.assign({id:uid()},f)).filter(f=>f.date&&f.min>0),skipped:0,rules:o.rules||[],note:'Copia de seguridad'};
+      if(!o||!Array.isArray(o.flights)) throw new Error('El archivo no es una copia de este libro de vuelo.');
+      res={flights:o.flights.filter(f=>f&&f.date&&f.min>=0).map(f=>Object.assign({},f,{id:uid(),rowId:undefined,ref:undefined})),skipped:0,form:o.form||[],note:'Copia de seguridad'};
     } else { const rows=parseCSV(await file.text()); res=tableToFlights(rows[0]||[],rows.slice(1)); res.note='CSV'; }
-    if(!res.flights.length) throw new Error('No he encontrado ningún vuelo válido en el archivo.');
+    if(!res.flights.length) throw new Error('No hay ningún vuelo válido en el archivo.');
     pending=res;
     const ds=res.flights.map(f=>f.date).sort(), tot=sum(res.flights.filter(f=>!isSim(f)),f=>f.min);
-    modal(`<h3>Importar ${res.flights.length} vuelos</h3><div>${esc(res.note)} · del ${fmtDate(ds[0])} al ${fmtDate(ds[ds.length-1])}<br>Vuelo real: <b class="num">${hm(tot)} h</b>${res.skipped?`<br><span class="hint">${res.skipped} filas omitidas por no tener fecha u horas válidas.</span>`:''}</div>
-      <div class="hint">${S.demo?'Los datos de ejemplo se sustituirán.':'Reemplazar borra tus datos actuales; Añadir mantiene los actuales y salta los duplicados.'}</div>
-      <div class="row"><button class="primary" data-act="imp-replace">${S.demo?'Importar':'Reemplazar mis datos'}</button>${S.demo?'':'<button data-act="imp-add">Añadir a los actuales</button>'}<button data-act="modal-x">Cancelar</button></div>`);
+    modal(`<h2>Importar ${plural(res.flights.length,'vuelo')}</h2><div>${esc(res.note)}, del ${fmtDate(ds[0])} al ${fmtDate(ds[ds.length-1])}.<br>Vuelo real: <b class="n">${hm(tot)} h</b>${res.skipped?`<br><span class="hint">${plural(res.skipped,'fila')} sin fecha u horas válidas, omitida${res.skipped>1?'s':''}.</span>`:''}</div>
+      <div class="hint">${S.demo||!S.flights.length?'':'Reemplazar borra los vuelos actuales; Añadir los conserva y salta los repetidos.'}</div>
+      <div class="row"><button class="primary wide" data-act="imp-replace">${S.demo||!S.flights.length?'Importar':'Reemplazar mis vuelos'}</button>${S.demo||!S.flights.length?'':'<button data-act="imp-add">Añadir a los actuales</button>'}<button data-act="modal-x">Cancelar</button></div>`);
   }catch(ex){ err('No se pudo importar: '+ex.message); }
   const fi=$('#file'); if(fi) fi.value='';
 }
@@ -817,45 +1037,45 @@ async function saveFile(name,data){
     const blob=new Blob([data],{type});
     const file=new File([blob],name,{type});
     if(/iPhone|iPad|Android/i.test(navigator.userAgent)&&navigator.canShare&&navigator.canShare({files:[file]})){
-      try{ await navigator.share({files:[file],title:name}); toast('Copia compartida'); return; }catch(e){ if(e&&e.name==='AbortError') return; }
+      try{ await navigator.share({files:[file],title:name}); return; }catch(e){ if(e&&e.name==='AbortError') return; }
     }
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     toast('Archivo generado');
-  }catch(e){ toast('No se pudo guardar el archivo. Prueba con Copiar copia.'); }
+  }catch(e){ noDl=true; toast('Aquí no se pueden guardar archivos. Usa Copiar al portapapeles.'); render(); }
 }
 async function copyText(t){
   try{ await navigator.clipboard.writeText(t); toast('Copia en el portapapeles'); }
-  catch(e){ modal(`<h3>Copia de seguridad</h3><div class="hint">Selecciona todo el texto y cópialo.</div><textarea id="bk" readonly rows="6">${esc(t)}</textarea><div class="row"><button data-act="modal-x">Cerrar</button></div>`); const b=$('#bk'); if(b){ b.focus(); b.select(); } }
+  catch(e){ modal(`<h2>Copia de seguridad</h2><div class="hint">Selecciona todo el texto y cópialo.</div><textarea id="bk" readonly rows="6">${esc(t)}</textarea><div class="row"><button data-act="modal-x">Cerrar</button></div>`); const b=$('#bk'); if(b){ b.focus(); b.select(); } }
 }
 
-/* ---------- boot ---------- */
+/* ---------- arranque ---------- */
 (function(){
-  load(); render();
+  load(); applyTheme(); render();
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(_){}
-  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
-  // Enlace de configuración de un toque: index.html#conectar=<base64 de {"u":url,"t":token}>
+  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').then(r=>{ try{ r.update(); }catch(_){} }).catch(()=>{});
+  // Enlace de conexión de un toque: index.html#conectar=<base64 de {"u":url,"t":token}>
   // (lo que va tras # nunca se envía al servidor ni se guarda en GitHub)
   function tryConnectLink(){
     const mh=location.hash.match(/^#conectar=(.+)$/);
     if(!mh) return false;
     try{
       const c=JSON.parse(atob(decodeURIComponent(mh[1])));
-      history.replaceState(null,'',location.pathname+location.search+'#datos');
+      history.replaceState(null,'',location.pathname+location.search+'#resumen');
       if(c.u&&c.t){
-        toast('Conectando con tu Hoja de Google…');
-        connectSync(c.u,c.t).then(()=>{ location.hash='resumen'; render(); toast('Conectado: '+S.flights.length+' vuelos sincronizados'); })
-          .catch(ex=>{ render(); toast('No se pudo conectar: '+ex.message); });
+        if(syncConfigured()&&S.sync.url===c.u&&S.sync.token===c.t){ render(); syncAll(true); return true; }
+        toast('Conectando con tu hoja…');
+        connectSync(c.u,c.t).then(()=>{ render(); toast(`Conectado: ${plural(S.flights.length,'vuelo')}`); })
+          .catch(ex=>{ location.hash='datos'; render(); toast('No se pudo conectar: '+ex.message); });
         return true;
       }
     }catch(_){}
+    render();
     return false;
   }
   window.addEventListener('hashchange',tryConnectLink);
   if(tryConnectLink()) return;
-  if(syncConfigured()){
-    drainPending().then(()=>syncPullAll()).then(()=>{ render(); }).catch(()=>{});
-  }
+  syncAll();
 })();
 </script>
 </body>
