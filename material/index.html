@@ -145,7 +145,18 @@ table.t td{padding:5px 4px;border-bottom:1px solid var(--line);vertical-align:to
 table.t td.n{text-align:right;font-family:var(--mono);white-space:nowrap}
 </style>
 </head>
+<style>
+#boot{display:none}
+html.booting #boot{display:block;position:fixed;inset:0;z-index:9999;background:#0b0d08;transition:opacity .6s ease}
+#boot.out{display:block;position:fixed;inset:0;z-index:9999;background:#0b0d08;opacity:0;pointer-events:none;transition:opacity .6s ease}
+#boot canvas{width:100%;height:100%;display:block}
+</style>
 <body>
+<div id="boot" aria-hidden="true"><canvas></canvas></div>
+<script>/* Arranque animado: al abrir la app instalada (o con #boot); nunca si se pide menos movimiento */
+(function(){try{var st=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true,forz=/[#&]boot\b/.test(location.hash);
+if((st||forz)&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&!/[#&]conectar=/.test(location.hash)||forz)document.documentElement.classList.add('booting');
+if(/[#&]bootmanual\b/.test(location.hash))window.__bootManual=1;}catch(e){}})();</script>
 <header class="top">
   <div class="brand">Material<small>SAER · GRUHEL</small></div>
   <button id="pill" type="button" data-a="sync">…</button>
@@ -165,7 +176,7 @@ table.t td.n{text-align:right;font-family:var(--mono);white-space:nowrap}
 
 <script>
 'use strict';
-const VER='2.0';
+const VER='2.1';
 const KEY='material-gruhel-v1';
 const HELI='HELICÓPTERO ',SACA='SACA AMARILLA',OFI='OFICINA (REPUESTO)',SALA='SALA MECÁNICOS';
 const BLOQUEA=['PRESTADO · PEND. DEVOLUCIÓN','EN REPARACIÓN','DAÑADO · NO USAR','PERDIDO','BAJA'];
@@ -1030,5 +1041,6 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>
+<script src="splash.js?v=2.1" defer></script>
 </body>
 </html>

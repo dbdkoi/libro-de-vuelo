@@ -1,6 +1,6 @@
-const CACHE='material-gruhel-v3';
+const CACHE='material-gruhel-v4';
 const BASE=new URL('./',self.registration.scope).href;
-const CORE=['./','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-m-192.png','./icon-m-512.png','./apple-touch-icon.png'];
+const CORE=['./','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-m-192.png','./icon-m-512.png','./apple-touch-icon.png','./splash.js','./splash-base.webp','./splash-gear.webp','./splash-cap.webp','./splash-cab.webp'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE.map(u=>new Request(u,{cache:'reload'})))).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('material-gruhel')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{
