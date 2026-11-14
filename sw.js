@@ -1,8 +1,8 @@
 // Logbook: la página se pide siempre a la red (con la copia guardada como respaldo sin cobertura),
 // así una versión nueva aparece al abrir la app. Solo atiende sus propios archivos, no los de /material/.
-const CACHE='libro-vuelo-v7';
+const CACHE='libro-vuelo-v8';
 const BASE=new URL('./',self.registration.scope).href;
-const CORE=['./','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
+const CORE=['./','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./splash.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE.map(u=>new Request(u,{cache:'reload'})))).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('libro-vuelo')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 const put=(key,res)=>{ if(res&&res.ok){ const cp=res.clone(); caches.open(CACHE).then(c=>c.put(key,cp)); } return res; };

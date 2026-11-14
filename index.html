@@ -247,7 +247,18 @@ button:disabled{opacity:.5}
 @media (max-width:359px){.hero .val{font-size:60px}.fld.t{grid-column:span 3}}
 </style>
 </head>
+<style>
+#boot{display:none}
+html.booting #boot{display:block;position:fixed;inset:0;z-index:9999;background:#0b0d08;transition:opacity .6s ease}
+#boot.out{display:block;position:fixed;inset:0;z-index:9999;background:#0b0d08;opacity:0;pointer-events:none;transition:opacity .6s ease}
+#boot canvas{width:100%;height:100%;display:block}
+</style>
 <body>
+<div id="boot" aria-hidden="true"><canvas></canvas></div>
+<script>/* Arranque animado: al abrir la app instalada (o con #boot); nunca si se pide menos movimiento */
+(function(){try{var st=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true,forz=/[#&]boot\b/.test(location.hash);
+if((st||forz)&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&!/[#&]conectar=/.test(location.hash)||forz)document.documentElement.classList.add('booting');
+if(/[#&]bootmanual\b/.test(location.hash))window.__bootManual=1;}catch(e){}})();</script>
 <header class="top">
   <div class="bar">
     <div class="brand">LOGBOOK</div>
@@ -404,7 +415,7 @@ async function readXlsx(buf){
 /*PURE-END*/
 
 /* ---------- App ---------- */
-const VER='2.0';
+const VER='2.1';
 const KEY='libro-vuelo-v1';
 const ROLES=['PIC','SIC','SPIC','PICUS'];
 const TYPE_ORDER=['EC120','EC135 P2+','EC135 P3','H135 P3H'];
@@ -1078,5 +1089,6 @@ async function copyText(t){
   syncAll();
 })();
 </script>
+<script src="splash.js?v=2.1" defer></script>
 </body>
 </html>
